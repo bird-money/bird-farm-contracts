@@ -4,7 +4,7 @@ const MockBEP20 = artifacts.require('MockERC20');
 
 contract('MasterChef', ([alice, bob, carol, dev, minter]) => {
   beforeEach(async () => {
-    this.usdt = await MockBEP20.new('USDT', 'USDT', '1000000', {
+    this.usdt = await MockBEP20.new('USDT', 'USDT', '100000000000', {
       from: minter,
     });
     this.lp1 = await MockBEP20.new('LPToken', 'LP1', '1000000', {
@@ -30,7 +30,11 @@ contract('MasterChef', ([alice, bob, carol, dev, minter]) => {
         from: minter,
       }
     );
-    await this.usdt.transferOwnership(this.chef.address, { from: minter });
+    //await this.usdt.transferOwnership(this.chef.address, { from: minter });
+    // this.usdt = await MockBEP20.new('USDT', 'USDT', '1000000', {
+    //   from: minter,
+    // });
+    await this.usdt.transfer(this.chef.address, '1000000', { from: minter });
 
     await this.lp1.transfer(bob, '2000', { from: minter });
     await this.lp2.transfer(bob, '2000', { from: minter });

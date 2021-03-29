@@ -197,8 +197,8 @@ contract MasterChef is Ownable {
             multiplier.mul(rewardTokenPerBlock).mul(pool.allocPoint).div(
                 totalAllocPoint
             );
-        rewardToken.mint(devaddr, rewardTokenReward.div(10));
-        rewardToken.mint(address(this), rewardTokenReward);
+        //rewardToken.mint(devaddr, rewardTokenReward.div(10));
+        //rewardToken.mint(address(this), rewardTokenReward);
         pool.accRewardTokenPerShare = pool.accRewardTokenPerShare.add(
             rewardTokenReward.mul(1e12).div(lpSupply)
         );
