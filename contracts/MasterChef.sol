@@ -23,6 +23,7 @@ contract MasterChef is Ownable {
     struct UserInfo {
         uint256 amount; // How many LP tokens the user has provided.
         uint256 rewardDebt; // Reward debt. See explanation below.
+        uint256 unstakeTime; // user can unstake LP tokens at this time to get reward
         //
         // We do some fancy math here. Basically, any point in time, the amount of REWARD_TOKENs
         // entitled to a user but is pending to be distributed is:
@@ -67,6 +68,8 @@ contract MasterChef is Ownable {
 
     // The block number when REWARD_TOKEN distribution stops.
     uint256 public endRewardBlock;
+
+    uint256 public unstakeFrozenTime = 72 hours;
 
     event Deposit(address indexed user, uint256 indexed pid, uint256 amount);
     event Withdraw(address indexed user, uint256 indexed pid, uint256 amount);
@@ -221,13 +224,15 @@ contract MasterChef is Ownable {
                 user.amount.mul(pool.accRewardTokenPerShare).div(1e12).sub(
                     user.rewardDebt
                 );
-            safeRewardTokenTransfer(msg.sender, pending);
+            if (now > user.unstakeTime)
+                safeRewardTokenTransfer(msg.sender, pending);
         }
         pool.lpToken.safeTransferFrom(
             address(msg.sender),
             address(this),
             _amount
         );
+        user.unstakeTime = now + unstakeFrozenTime;
         user.amount = user.amount.add(_amount);
         user.rewardDebt = user.amount.mul(pool.accRewardTokenPerShare).div(
             1e12
@@ -240,18 +245,21 @@ contract MasterChef is Ownable {
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][msg.sender];
         require(user.amount >= _amount, "withdraw: not good");
-        updatePool(_pid);
-        uint256 pending =
-            user.amount.mul(pool.accRewardTokenPerShare).div(1e12).sub(
-                user.rewardDebt
+
+        if (now > user.unstakeTime) {
+            updatePool(_pid);
+            uint256 pending =
+                user.amount.mul(pool.accRewardTokenPerShare).div(1e12).sub(
+                    user.rewardDebt
+                );
+            safeRewardTokenTransfer(msg.sender, pending);
+            user.amount = user.amount.sub(_amount);
+            user.rewardDebt = user.amount.mul(pool.accRewardTokenPerShare).div(
+                1e12
             );
-        safeRewardTokenTransfer(msg.sender, pending);
-        user.amount = user.amount.sub(_amount);
-        user.rewardDebt = user.amount.mul(pool.accRewardTokenPerShare).div(
-            1e12
-        );
-        pool.lpToken.safeTransfer(address(msg.sender), _amount);
-        emit Withdraw(msg.sender, _pid, _amount);
+            pool.lpToken.safeTransfer(address(msg.sender), _amount);
+            emit Withdraw(msg.sender, _pid, _amount);
+        }
     }
 
     // Withdraw without caring about rewards. EMERGENCY ONLY.
