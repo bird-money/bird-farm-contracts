@@ -47,7 +47,7 @@ contract MasterChef is Ownable {
     // The REWARD_TOKEN TOKEN!
     IERC20 public rewardToken;
     // Dev address.
-    address public devaddr;
+    // address public devaddr;
     // Block number when bonus REWARD_TOKEN period ends.
     uint256 public bonusEndBlock;
     // REWARD_TOKEN tokens created per block.
@@ -78,14 +78,14 @@ contract MasterChef is Ownable {
 
     constructor(
         IERC20 _rewardToken,
-        address _devaddr,
+        // address _devaddr,
         uint256 _rewardTokenPerBlock,
         uint256 _startRewardBlock,
         uint256 _endRewardBlock,
         uint256 _bonusEndBlock
     ) public {
         rewardToken = _rewardToken;
-        devaddr = _devaddr;
+        // devaddr = _devaddr;
         rewardTokenPerBlock = _rewardTokenPerBlock;
         startRewardBlock = _startRewardBlock;
         endRewardBlock = _endRewardBlock;
@@ -279,8 +279,8 @@ contract MasterChef is Ownable {
     }
 
     // Update dev address by the previous dev.
-    function dev(address _devaddr) public {
-        require(msg.sender == devaddr, "dev: wut?");
-        devaddr = _devaddr;
-    }
+    // function dev(address _devaddr) public {
+    //     require(msg.sender == devaddr, "dev: wut?");
+    //     devaddr = _devaddr;
+    // }
 }
