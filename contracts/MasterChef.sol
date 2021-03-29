@@ -336,6 +336,14 @@ contract MasterChef is Ownable {
     function setMigrator(IMigratorChef _migrator) public onlyOwner {
         migrator = _migrator;
     }
+
+    function depositRewardTokens(uint256 _amount) public onlyOwner {
+        rewardToken.transferFrom(msg.sender, address(this), _amount);
+    }
+
+    function withdrawRewardTokens(uint256 _amount) public onlyOwner {
+        rewardToken.transfer(msg.sender, _amount);
+    }
 }
 
 interface IMigratorChef {
