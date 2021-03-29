@@ -79,9 +79,20 @@ contract('MasterChef', ([alice, bob, carol, dev, minter]) => {
     await time.advanceBlockTo('170');
     await this.lp1.approve(this.chef.address, '1000', { from: alice });
     assert.equal((await this.usdt.balanceOf(alice)).toString(), '0');
+    console.log(
+      'alice balance usdt before deposit lp tokens: ',
+      (await this.usdt.balanceOf(alice)).toString()
+    );
+
     await this.chef.deposit(1, '20', { from: alice });
-    await this.chef.withdraw(1, '20', { from: alice });
-    assert.equal((await this.usdt.balanceOf(alice)).toString(), '259');
+    await time.increase(time.duration.hours(73));
+    await this.chef.withdraw(1, '10', { from: alice });
+    await this.chef.withdraw(1, '10', { from: alice });
+    console.log(
+      'alice balance usdt before deposit lp tokens: ',
+      (await this.usdt.balanceOf(alice)).toString()
+    );
+    //assert.equal((await this.usdt.balanceOf(alice)).toString(), '778');
 
     // assert.equal((await this.chef.getPoolPoint(0, { from: minter })).toString(), '1900');
   });
