@@ -69,6 +69,7 @@ contract MasterChef is Ownable {
     // The block number when REWARD_TOKEN distribution stops.
     uint256 public endRewardBlock;
 
+    //user can get reward and unstake after this time only.
     uint256 public unstakeFrozenTime = 72 hours;
 
     event Deposit(address indexed user, uint256 indexed pid, uint256 amount);
@@ -87,11 +88,49 @@ contract MasterChef is Ownable {
         uint256 _endRewardBlock,
         uint256 _bonusEndBlock
     ) public {
+        setAll(
+            _rewardToken,
+            _rewardTokenPerBlock,
+            _startRewardBlock,
+            _endRewardBlock,
+            _bonusEndBlock
+        );
+    }
+
+    function setAll(
+        IERC20 _rewardToken,
+        uint256 _rewardTokenPerBlock,
+        uint256 _startRewardBlock,
+        uint256 _endRewardBlock,
+        uint256 _bonusEndBlock
+    ) public onlyOwner {
         rewardToken = _rewardToken;
-        // devaddr = _devaddr;
         rewardTokenPerBlock = _rewardTokenPerBlock;
         startRewardBlock = _startRewardBlock;
         endRewardBlock = _endRewardBlock;
+        bonusEndBlock = _bonusEndBlock;
+    }
+
+    function setRewardToken(IERC20 _rewardToken) public onlyOwner {
+        rewardToken = _rewardToken;
+    }
+
+    function setRewardTokenPerBlock(uint256 _rewardTokenPerBlock)
+        public
+        onlyOwner
+    {
+        rewardTokenPerBlock = _rewardTokenPerBlock;
+    }
+
+    function setStartRewardBlock(uint256 _startRewardBlock) public onlyOwner {
+        startRewardBlock = _startRewardBlock;
+    }
+
+    function setEndRewardBlock(uint256 _endRewardBlock) public onlyOwner {
+        endRewardBlock = _endRewardBlock;
+    }
+
+    function setBonusEndBlock(uint256 _bonusEndBlock) public onlyOwner {
         bonusEndBlock = _bonusEndBlock;
     }
 
