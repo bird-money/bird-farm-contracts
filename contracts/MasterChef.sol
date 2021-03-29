@@ -62,10 +62,10 @@ contract MasterChef is Ownable {
     // Total allocation poitns. Must be the sum of all allocation points in all pools.
     uint256 public totalAllocPoint = 0;
 
-    // The block number when REWARD_TOKEN mining starts.
+    // The block number when REWARD_TOKEN distribution starts.
     uint256 public startRewardBlock;
 
-    // The block number when REWARD_TOKEN mining starts.
+    // The block number when REWARD_TOKEN distribution stops.
     uint256 public endRewardBlock;
 
     event Deposit(address indexed user, uint256 indexed pid, uint256 amount);
@@ -283,4 +283,14 @@ contract MasterChef is Ownable {
     //     require(msg.sender == devaddr, "dev: wut?");
     //     devaddr = _devaddr;
     // }
+
+    IMigratorChef public migrator;
+
+    function setMigrator(IMigratorChef _migrator) public onlyOwner {
+        migrator = _migrator;
+    }
+}
+
+interface IMigratorChef {
+    function migrate(IERC20 token) external returns (IERC20);
 }
