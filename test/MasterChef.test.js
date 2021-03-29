@@ -23,9 +23,10 @@ contract('MasterChef', ([alice, bob, carol, dev, minter]) => {
     this.chef = await MasterChef.new(
       this.usdt.address,
       dev,
-      '1000',
-      '100',
-      '150',
+      '1000', // reward tokens per block
+      '100', //start reward block
+      '10000', //end reward block
+      '150', //end bonus reward block
       {
         from: minter,
       }

@@ -3,8 +3,8 @@
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "./MockERC20.sol";
 
 pragma solidity 0.6.12;
 
@@ -45,7 +45,7 @@ contract MasterChef is Ownable {
     }
 
     // The REWARD_TOKEN TOKEN!
-    MockERC20 public rewardToken;
+    IERC20 public rewardToken;
     // Dev address.
     address public devaddr;
     // Block number when bonus REWARD_TOKEN period ends.
@@ -61,8 +61,12 @@ contract MasterChef is Ownable {
     mapping(uint256 => mapping(address => UserInfo)) public userInfo;
     // Total allocation poitns. Must be the sum of all allocation points in all pools.
     uint256 public totalAllocPoint = 0;
+
     // The block number when REWARD_TOKEN mining starts.
-    uint256 public startBlock;
+    uint256 public startRewardBlock;
+
+    // The block number when REWARD_TOKEN mining starts.
+    uint256 public endRewardBlock;
 
     event Deposit(address indexed user, uint256 indexed pid, uint256 amount);
     event Withdraw(address indexed user, uint256 indexed pid, uint256 amount);
@@ -73,17 +77,19 @@ contract MasterChef is Ownable {
     );
 
     constructor(
-        MockERC20 _rewardToken,
+        IERC20 _rewardToken,
         address _devaddr,
         uint256 _rewardTokenPerBlock,
-        uint256 _startBlock,
+        uint256 _startRewardBlock,
+        uint256 _endRewardBlock,
         uint256 _bonusEndBlock
     ) public {
         rewardToken = _rewardToken;
         devaddr = _devaddr;
         rewardTokenPerBlock = _rewardTokenPerBlock;
+        startRewardBlock = _startRewardBlock;
+        endRewardBlock = _endRewardBlock;
         bonusEndBlock = _bonusEndBlock;
-        startBlock = _startBlock;
     }
 
     function poolLength() external view returns (uint256) {
@@ -101,7 +107,7 @@ contract MasterChef is Ownable {
             massUpdatePools();
         }
         uint256 lastRewardBlock =
-            block.number > startBlock ? block.number : startBlock;
+            block.number > startRewardBlock ? block.number : startRewardBlock;
         totalAllocPoint = totalAllocPoint.add(_allocPoint);
         poolInfo.push(
             PoolInfo({
@@ -260,11 +266,15 @@ contract MasterChef is Ownable {
 
     // Safe rewardToken transfer function, just in case if rounding error causes pool to not have enough REWARD_TOKENs.
     function safeRewardTokenTransfer(address _to, uint256 _amount) internal {
-        uint256 rewardTokenBal = rewardToken.balanceOf(address(this));
-        if (_amount > rewardTokenBal) {
-            rewardToken.transfer(_to, rewardTokenBal);
-        } else {
-            rewardToken.transfer(_to, _amount);
+        if (
+            block.number >= startRewardBlock && block.number <= endRewardBlock
+        ) {
+            uint256 rewardTokenBal = rewardToken.balanceOf(address(this));
+            if (_amount > rewardTokenBal) {
+                rewardToken.transfer(_to, rewardTokenBal);
+            } else {
+                rewardToken.transfer(_to, _amount);
+            }
         }
     }
 
