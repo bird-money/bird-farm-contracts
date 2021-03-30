@@ -47,7 +47,21 @@ const kovanDeployScript = async (
 const mainnetDeployScript = async (
   deployer,
   [alice, bob, carol, dev, minter]
-) => {};
+) => {
+  const usdt = await MockERC20.at('0xdac17f958d2ee523a2206206994597c13d831ec7');
+  console.log('usdt.address: ', usdt.address);
+
+  await deployer.deploy(
+    MasterChef,
+    usdt.address,
+    //dev,
+    '1000', // reward tokens per block
+    '100', //start reward block
+    '10000', //end reward block
+    '150' //end bonus reward block
+  );
+  console.log('MasterChef.address: ', MasterChef.address);
+};
 
 module.exports = async (deployer, network, accounts) => {
   console.log('Deploying to: ', network);
