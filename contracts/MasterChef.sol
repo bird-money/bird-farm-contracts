@@ -88,22 +88,6 @@ contract MasterChef is Ownable {
         uint256 _endRewardBlock,
         uint256 _bonusEndBlock
     ) public {
-        setAll(
-            _rewardToken,
-            _rewardTokenPerBlock,
-            _startRewardBlock,
-            _endRewardBlock,
-            _bonusEndBlock
-        );
-    }
-
-    function setAll(
-        IERC20 _rewardToken,
-        uint256 _rewardTokenPerBlock,
-        uint256 _startRewardBlock,
-        uint256 _endRewardBlock,
-        uint256 _bonusEndBlock
-    ) public onlyOwner {
         rewardToken = _rewardToken;
         rewardTokenPerBlock = _rewardTokenPerBlock;
         startRewardBlock = _startRewardBlock;
@@ -111,8 +95,28 @@ contract MasterChef is Ownable {
         bonusEndBlock = _bonusEndBlock;
     }
 
+    function setAll(
+        IERC20 _rewardToken,
+        uint256 _rewardTokenPerBlock,
+        uint256 _startRewardBlock,
+        uint256 _endRewardBlock,
+        uint256 _bonusEndBlock,
+        uint256 _unstakeFrozenTime
+    ) public onlyOwner {
+        rewardToken = _rewardToken;
+        rewardTokenPerBlock = _rewardTokenPerBlock;
+        startRewardBlock = _startRewardBlock;
+        endRewardBlock = _endRewardBlock;
+        bonusEndBlock = _bonusEndBlock;
+        unstakeFrozenTime = _unstakeFrozenTime;
+    }
+
     function setRewardToken(IERC20 _rewardToken) public onlyOwner {
         rewardToken = _rewardToken;
+    }
+
+    function setUnstakeFrozenTime(uint256 _unstakeFrozenTime) public onlyOwner {
+        unstakeFrozenTime = _unstakeFrozenTime;
     }
 
     function setRewardTokenPerBlock(uint256 _rewardTokenPerBlock)

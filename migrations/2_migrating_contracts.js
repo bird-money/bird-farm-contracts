@@ -26,7 +26,7 @@ const kovanDeployScript = async (
   deployer,
   [alice, bob, carol, dev, minter]
 ) => {
-  await deployer.deploy(MockERC20, 'USDT', 'USDT', '100000000000');
+  await deployer.deploy(MockERC20, 'USDT', 'USDT', toWei('100'));
   console.log('LP Token MockERC20.address: ', MockERC20.address);
 
   const usdt = await MockERC20.at('0x3Da9E82d842b6343e1b6b452C5bbBa8B994b1D7C');
@@ -83,6 +83,8 @@ module.exports = async (deployer, network, accounts) => {
       await localDeployScript(deployer, accounts);
   }
 };
+
+const toWei = (w) => web3.utils.toWei(w);
 
 const MasterChef = artifacts.require('MasterChef');
 const MockERC20 = artifacts.require('MockERC20');
