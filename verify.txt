@@ -1,0 +1,107 @@
+yarn deploy 
+yarn run v1.22.5
+$ yarn migrate && yarn verify
+$ truffle migrate --network kovan --reset
+
+Compiling your contracts...
+===========================
+> Compiling ./contracts/MasterChef.sol
+> Artifacts written to /home/muneeb/work/Bird Money/bird-farm-contracts/build/contracts
+> Compiled successfully using:
+   - solc: 0.6.12+commit.27d51765.Emscripten.clang
+
+
+
+Starting migrations...
+======================
+> Network name:    'kovan'
+> Network id:      42
+> Block gas limit: 12500000 (0xbebc20)
+
+
+1_initial_migration.js
+======================
+
+   Replacing 'Migrations'
+   ----------------------
+   > transaction hash:    0x39c501a37daedde71586a7051e06aba6e4acdbc02820067667b4deaab328e488
+   > Blocks: 2            Seconds: 13
+   > contract address:    0xe4B46B655F105465Cff93eD4945e357CC76e586D
+   > block number:        24100189
+   > block timestamp:     1617086332
+   > account:             0xcF01971DB0CAB2CBeE4A8C21BB7638aC1FA1c38c
+   > balance:             9.130708705544261136
+   > gas used:            153706 (0x2586a)
+   > gas price:           20 gwei
+   > value sent:          0 ETH
+   > total cost:          0.00307412 ETH
+
+Migrations.address:  0xe4B46B655F105465Cff93eD4945e357CC76e586D
+
+   > Saving migration to chain.
+   > Saving artifacts
+   -------------------------------------
+   > Total cost:          0.00307412 ETH
+
+
+2_migrating_contracts.js
+========================
+Deploying to:  kovan
+
+   Replacing 'MockERC20'
+   ---------------------
+   > transaction hash:    0x4c83f175ea9b21044c2ac3922f9788fbedbcbe7320f5047f9c6c9f1c0c99140d
+   > Blocks: 2            Seconds: 13
+   > contract address:    0x3Da9E82d842b6343e1b6b452C5bbBa8B994b1D7C
+   > block number:        24100193
+   > block timestamp:     1617086364
+   > account:             0xcF01971DB0CAB2CBeE4A8C21BB7638aC1FA1c38c
+   > balance:             9.110392725544261136
+   > gas used:            973544 (0xedae8)
+   > gas price:           20 gwei
+   > value sent:          0 ETH
+   > total cost:          0.01947088 ETH
+
+MockERC20.address:  0x3Da9E82d842b6343e1b6b452C5bbBa8B994b1D7C
+
+   Replacing 'MasterChef'
+   ----------------------
+   > transaction hash:    0x3af88478788d1e539904fffbc0f3542c0d6f57875e94c1264dac2f3cfc41201e
+   > Blocks: 1            Seconds: 5
+   > contract address:    0xB61FBDC591E95DC7Aa8a053bF354b527Fd50144B
+   > block number:        24100195
+   > block timestamp:     1617086380
+   > account:             0xcF01971DB0CAB2CBeE4A8C21BB7638aC1FA1c38c
+   > balance:             9.074009085544261136
+   > gas used:            1819182 (0x1bc22e)
+   > gas price:           20 gwei
+   > value sent:          0 ETH
+   > total cost:          0.03638364 ETH
+
+MasterChef.address:  0xB61FBDC591E95DC7Aa8a053bF354b527Fd50144B
+
+   ⠸ Saving migration to chain.Error: Invalid JSON RPC response: ""
+   > Saving migration to chain.
+   > Saving artifacts
+   -------------------------------------
+   > Total cost:          0.05585452 ETH
+
+
+Summary
+=======
+> Total deployments:   3
+> Final cost:          0.05892864 ETH
+
+
+Verifying Migrations
+Max rate limit reached: https://kovan.etherscan.io/address/0xe4B46B655F105465Cff93eD4945e357CC76e586D#contracts
+Verifying MasterChef
+Max rate limit reached: https://kovan.etherscan.io/address/0xB61FBDC591E95DC7Aa8a053bF354b527Fd50144B#contracts
+Verifying MockERC20
+Max rate limit reached: https://kovan.etherscan.io/address/0x3Da9E82d842b6343e1b6b452C5bbBa8B994b1D7C#contracts
+Successfully verified 3 contract(s).
+
+
+LP Token: MockERC20: 0x9fC1425E346521bEF0Ff75518E3d4B5cF749a305
+Verifying MockERC20
+Pass - Verified: https://kovan.etherscan.io/address/0x9fC1425E346521bEF0Ff75518E3d4B5cF749a305#contracts

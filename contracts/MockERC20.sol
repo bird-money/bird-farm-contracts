@@ -1,6 +1,7 @@
-pragma solidity ^0.6.0;
+// SPDX-License-Identifier: MIT
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+pragma solidity ^0.6.0;
 
 contract MockERC20 is ERC20, Ownable {
     constructor(
@@ -11,7 +12,7 @@ contract MockERC20 is ERC20, Ownable {
         _mint(msg.sender, _supply);
     }
 
-    function mint(address account, uint256 amount) external onlyOwner {
+    function mint(address account, uint256 amount) external {
         _mint(account, amount);
     }
 }

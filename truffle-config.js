@@ -14,9 +14,15 @@ module.exports = {
   // for more details on how to specify configuration options!
   //
   networks: {
-    development: {
+    develop: {
       host: '127.0.0.1',
       port: 8545,
+      network_id: '*',
+      gas: 6721975,
+    },
+    development: {
+      host: '127.0.0.1',
+      port: 7545,
       network_id: '*',
       gas: 6721975,
     },
@@ -63,11 +69,12 @@ module.exports = {
         );
       },
       network_id: '42',
+      skipDryRun: true,
     },
   },
   plugins: ['truffle-plugin-verify'],
   api_keys: {
-    etherscan: '8R621NFWB6T6RMADTAZT8UGBBC5IATEUEM', //etherscanKey,
+    etherscan: etherscanKey, //'HSR39CEBP479H5TBJTXR693XMATW8T68KE', //'VAAPUS45322HIQ4YARV9DJ3S1JYU7HPBGF', //'8R621NFWB6T6RMADTAZT8UGBBC5IATEUEM',
   },
   compilers: {
     solc: {
