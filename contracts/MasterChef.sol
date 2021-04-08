@@ -56,6 +56,9 @@ contract MasterChef is Ownable {
 
     // Info of each pool.
     PoolInfo[] public poolInfo;
+
+    mapping(IERC20 => bool) public uniqueTokenInPool;
+
     // Info of each user that stakes LP tokens.
     mapping(uint256 => mapping(address => UserInfo)) public userInfo;
     // Total allocation poitns. Must be the sum of all allocation points in all pools.
@@ -68,7 +71,7 @@ contract MasterChef is Ownable {
     uint256 public endRewardBlock;
 
     //user can get reward and unstake after this time only.
-    uint256 public unstakeFrozenTime = 72 hours;
+    uint256 public unstakeFrozenTime = 0; // No froze time initially, if needed it can be added and informed to community.
 
     event Deposit(address indexed user, uint256 indexed pid, uint256 amount);
     event Withdraw(address indexed user, uint256 indexed pid, uint256 amount);
@@ -147,6 +150,7 @@ contract MasterChef is Ownable {
         IERC20 _lpToken,
         bool _withUpdate
     ) public onlyOwner {
+        require(!uniqueTokenInPool[_lpToken], "LP Token already added");
         if (_withUpdate) {
             massUpdatePools();
         }
@@ -161,6 +165,7 @@ contract MasterChef is Ownable {
                 accRewardTokenPerShare: 0
             })
         );
+        uniqueTokenInPool[_lpToken] = true;
     }
 
     // Update the given pool's REWARD_TOKEN allocation point. Can only be called by the owner.
@@ -257,6 +262,7 @@ contract MasterChef is Ownable {
 
     // Deposit LP tokens to MasterChef for REWARD_TOKEN allocation.
     function deposit(uint256 _pid, uint256 _amount) public {
+        require(_amount > 0, "not allowed to deposit 0");
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][msg.sender];
         updatePool(_pid);
@@ -268,12 +274,13 @@ contract MasterChef is Ownable {
             if (now > user.unstakeTime)
                 safeRewardTokenTransfer(msg.sender, pending);
         }
-        pool.lpToken.transferFrom(address(msg.sender), address(this), _amount);
         user.unstakeTime = now + unstakeFrozenTime;
         user.amount = user.amount.add(_amount);
         user.rewardDebt = user.amount.mul(pool.accRewardTokenPerShare).div(
             1e12
         );
+
+        pool.lpToken.transferFrom(address(msg.sender), address(this), _amount);
         emit Deposit(msg.sender, _pid, _amount);
     }
 
@@ -303,10 +310,10 @@ contract MasterChef is Ownable {
     function emergencyWithdraw(uint256 _pid) public {
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][msg.sender];
-        pool.lpToken.transfer(address(msg.sender), user.amount);
-        emit EmergencyWithdraw(msg.sender, _pid, user.amount);
         user.amount = 0;
         user.rewardDebt = 0;
+        pool.lpToken.transfer(address(msg.sender), user.amount);
+        emit EmergencyWithdraw(msg.sender, _pid, user.amount);
     }
 
     // Safe rewardToken transfer function, just in case if rounding error causes pool to not have enough REWARD_TOKENs.
@@ -322,12 +329,6 @@ contract MasterChef is Ownable {
             }
         }
     }
-
-    // Update dev address by the previous dev.
-    // function dev(address _devaddr) public {
-    //     require(msg.sender == devaddr, "dev: wut?");
-    //     devaddr = _devaddr;
-    // }
 
     IMigratorChef public migrator;
 
