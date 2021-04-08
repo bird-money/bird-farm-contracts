@@ -83,7 +83,6 @@ contract MasterChef is Ownable {
 
     constructor(
         IERC20 _rewardToken,
-        // address _devaddr,
         uint256 _rewardTokenPerBlock,
         uint256 _startRewardBlock,
         uint256 _endRewardBlock,
@@ -252,8 +251,6 @@ contract MasterChef is Ownable {
             multiplier.mul(rewardTokenPerBlock).mul(pool.allocPoint).div(
                 totalAllocPoint
             );
-        //rewardToken.mint(devaddr, rewardTokenReward.div(10));
-        //rewardToken.mint(address(this), rewardTokenReward);
         pool.accRewardTokenPerShare = pool.accRewardTokenPerShare.add(
             rewardTokenReward.mul(1e12).div(lpSupply)
         );
@@ -262,7 +259,6 @@ contract MasterChef is Ownable {
 
     // Deposit LP tokens to MasterChef for REWARD_TOKEN allocation.
     function deposit(uint256 _pid, uint256 _amount) public {
-        require(_amount > 0, "not allowed to deposit 0");
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][msg.sender];
         updatePool(_pid);
@@ -272,9 +268,11 @@ contract MasterChef is Ownable {
                     user.rewardDebt
                 );
             if (now > user.unstakeTime)
-                safeRewardTokenTransfer(msg.sender, pending);
+                rewardTokenTransfer(msg.sender, pending);
         }
-        user.unstakeTime = now + unstakeFrozenTime;
+
+        if (_amount > 0) user.unstakeTime = now + unstakeFrozenTime;
+
         user.amount = user.amount.add(_amount);
         user.rewardDebt = user.amount.mul(pool.accRewardTokenPerShare).div(
             1e12
@@ -296,7 +294,7 @@ contract MasterChef is Ownable {
                 user.amount.mul(pool.accRewardTokenPerShare).div(1e12).sub(
                     user.rewardDebt
                 );
-            safeRewardTokenTransfer(msg.sender, pending);
+            rewardTokenTransfer(msg.sender, pending);
             user.amount = user.amount.sub(_amount);
             user.rewardDebt = user.amount.mul(pool.accRewardTokenPerShare).div(
                 1e12
@@ -316,8 +314,7 @@ contract MasterChef is Ownable {
         emit EmergencyWithdraw(msg.sender, _pid, user.amount);
     }
 
-    // Safe rewardToken transfer function, just in case if rounding error causes pool to not have enough REWARD_TOKENs.
-    function safeRewardTokenTransfer(address _to, uint256 _amount) internal {
+    function rewardTokenTransfer(address _to, uint256 _amount) internal {
         if (
             block.number >= startRewardBlock && block.number <= endRewardBlock
         ) {
