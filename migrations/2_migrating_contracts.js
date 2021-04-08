@@ -27,21 +27,25 @@ const kovanDeployScript = async (
   [alice, bob, carol, dev, minter]
 ) => {
   await deployer.deploy(MockERC20, 'USDT', 'USDT', toWei('100'));
-  console.log('LP Token MockERC20.address: ', MockERC20.address);
+  const lpAddr = MockERC20.address;
 
-  const usdt = await MockERC20.at('0x3Da9E82d842b6343e1b6b452C5bbBa8B994b1D7C');
-  console.log('usdt.address: ', usdt.address);
+  await deployer.deploy(MockERC20, 'USDT', 'USDT', toWei('100'));
 
   await deployer.deploy(
     MasterChef,
-    usdt.address,
+    MockERC20.address,
     //dev,
     '1000', // reward tokens per block
     '100', //start reward block
-    '10000', //end reward block
+    '1000000000000', //end reward block
     '150' //end bonus reward block
   );
+  console.log('LP Token MockERC20.address: ', lpAddr);
+  console.log('USDT MockERC20.address: ', MockERC20.address);
   console.log('MasterChef.address: ', MasterChef.address);
+
+  const usdt = await MockERC20.deployed();
+  await usdt.mint(MasterChef.address, toWei('100000'));
 };
 
 const mainnetDeployScript = async (

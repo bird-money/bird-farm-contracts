@@ -1,5 +1,4 @@
-yarn deploy
-yarn run v1.22.5
+arn deployyarn run v1.22.5
 $ yarn migrate && yarn verify
 $ truffle migrate --network kovan --reset
 
@@ -24,19 +23,19 @@ Starting migrations...
 
    Replacing 'Migrations'
    ----------------------
-   > transaction hash:    0x8d0476134f8eb17f86bfe9fe4148af45d929510d42a09624c20b09c4742fe953
-   > Blocks: 2            Seconds: 13
-   > contract address:    0x0E9dCad7E1D4969d4d9a501C34373821126FDc62
-   > block number:        24100767
-   > block timestamp:     1617090964
+   > transaction hash:    0x890829b492066d46c5a7975c464c35ea89827a3578fb50f5d79237268b870886
+   > Blocks: 1            Seconds: 9
+   > contract address:    0xf277573FF36cB41E73827Ed849C26d9410E35d92
+   > block number:        24183548
+   > block timestamp:     1617787580
    > account:             0xcF01971DB0CAB2CBeE4A8C21BB7638aC1FA1c38c
-   > balance:             9.032102715544261136
+   > balance:             3.272301619344261136
    > gas used:            153706 (0x2586a)
    > gas price:           20 gwei
    > value sent:          0 ETH
    > total cost:          0.00307412 ETH
 
-Migrations.address:  0x0E9dCad7E1D4969d4d9a501C34373821126FDc62
+Migrations.address:  0xf277573FF36cB41E73827Ed849C26d9410E35d92
 
    > Saving migration to chain.
    > Saving artifacts
@@ -50,55 +49,72 @@ Deploying to:  kovan
 
    Replacing 'MockERC20'
    ---------------------
-   > transaction hash:    0x412d32595af8988395ce70d955d5db8b77ac6faa3d4329fc7421f15fdb5a0984
-   > Blocks: 1            Seconds: 9
-   > contract address:    0xC64Bf0079856333FfBE39546Bc7524e6b19d20A7
-   > block number:        24100771
-   > block timestamp:     1617090996
+   > transaction hash:    0xcc56d5e0e6ca2a646fd429ae40dc67a0142e6a4e921dda2c76b2510002fbf053
+   > Blocks: 2            Seconds: 17
+   > contract address:    0x60c069F237105f4C0D8FEa27317afA0B43c77dBd
+   > block number:        24183554
+   > block timestamp:     1617787628
    > account:             0xcF01971DB0CAB2CBeE4A8C21BB7638aC1FA1c38c
-   > balance:             9.012287635544261136
+   > balance:             3.252486539344261136
    > gas used:            948499 (0xe7913)
    > gas price:           20 gwei
    > value sent:          0 ETH
    > total cost:          0.01896998 ETH
 
-LP Token MockERC20.address:  0xC64Bf0079856333FfBE39546Bc7524e6b19d20A7
-usdt.address:  0x3Da9E82d842b6343e1b6b452C5bbBa8B994b1D7C
+
+   Replacing 'MockERC20'
+   ---------------------
+   > transaction hash:    0xdd5f84fbc3af7e4f7bdf86ba0ede4f8f8de0e8a9f9f81174084fc776e7e613ed
+   > Blocks: 1            Seconds: 9
+   > contract address:    0x1d53739bEb286B90a841b3B2BC101254332df972
+   > block number:        24183556
+   > block timestamp:     1617787644
+   > account:             0xcF01971DB0CAB2CBeE4A8C21BB7638aC1FA1c38c
+   > balance:             3.233516559344261136
+   > gas used:            948499 (0xe7913)
+   > gas price:           20 gwei
+   > value sent:          0 ETH
+   > total cost:          0.01896998 ETH
+
 
    Replacing 'MasterChef'
    ----------------------
-   > transaction hash:    0xf7ebce7ecc8e947296832a89f6cc0f476438164853507125810a163163608101
-   > Blocks: 1            Seconds: 9
-   > contract address:    0x26eAd6Ef963D2F87e0201d3F25a9394fe41fec84
-   > block number:        24100773
-   > block timestamp:     1617091012
+   > transaction hash:    0xca65bc8d3a36bebd23f58f75f2b2cd0f963fc5c7ab378794c38921669bdcee1a
+   > Blocks: 1            Seconds: 5
+   > contract address:    0xb41b293b6819EA1a937Cb6300A95fa50e98b2ad4
+   > block number:        24183558
+   > block timestamp:     1617787660
    > account:             0xcF01971DB0CAB2CBeE4A8C21BB7638aC1FA1c38c
-   > balance:             8.975301835544261136
-   > gas used:            1849290 (0x1c37ca)
+   > balance:             3.199338159344261136
+   > gas used:            1708920 (0x1a1378)
    > gas price:           20 gwei
    > value sent:          0 ETH
-   > total cost:          0.0369858 ETH
-
-MasterChef.address:  0x26eAd6Ef963D2F87e0201d3F25a9394fe41fec84
+   > total cost:          0.0341784 ETH
 
    > Saving migration to chain.
    > Saving artifacts
    -------------------------------------
-   > Total cost:          0.05595578 ETH
+   > Total cost:          0.07211836 ETH
 
 
 Summary
 =======
-> Total deployments:   3
-> Final cost:          0.0590299 ETH
+> Total deployments:   4
+> Final cost:          0.07519248 ETH
+
+
+LP Token MockERC20.address:  0x60c069F237105f4C0D8FEa27317afA0B43c77dBd
+USDT MockERC20.address:  0x1d53739bEb286B90a841b3B2BC101254332df972
+MasterChef.address:  0xb41b293b6819EA1a937Cb6300A95fa50e98b2ad4
 
 
 $ truffle run verify Migrations MasterChef MockERC20 --network kovan
 Verifying Migrations
-Pass - Verified: https://kovan.etherscan.io/address/0x0E9dCad7E1D4969d4d9a501C34373821126FDc62#contracts
+Pass - Verified: https://kovan.etherscan.io/address/0xf277573FF36cB41E73827Ed849C26d9410E35d92#contracts
 Verifying MasterChef
-Pass - Verified: https://kovan.etherscan.io/address/0x26eAd6Ef963D2F87e0201d3F25a9394fe41fec84#contracts
+Pass - Verified: https://kovan.etherscan.io/address/0xb41b293b6819EA1a937Cb6300A95fa50e98b2ad4#contracts
 Verifying MockERC20
-Pass - Verified: https://kovan.etherscan.io/address/0xC64Bf0079856333FfBE39546Bc7524e6b19d20A7#contracts
+Pass - Verified: https://kovan.etherscan.io/address/0x1d53739bEb286B90a841b3B2BC101254332df972#contracts
 Successfully verified 3 contract(s).
-Done in 146.91s.
+Done in 176.61s.
+
