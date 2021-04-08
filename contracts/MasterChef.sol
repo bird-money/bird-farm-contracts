@@ -58,6 +58,9 @@ contract MasterChef is Ownable {
 
     // Info of each pool.
     PoolInfo[] public poolInfo;
+
+    mapping(IERC20 => bool) public uniqueTokenInPool;
+
     // Info of each user that stakes LP tokens.
     mapping(uint256 => mapping(address => UserInfo)) public userInfo;
     // Total allocation poitns. Must be the sum of all allocation points in all pools.
@@ -149,6 +152,7 @@ contract MasterChef is Ownable {
         IERC20 _lpToken,
         bool _withUpdate
     ) public onlyOwner {
+        require(!uniqueTokenInPool[_lpToken]);
         if (_withUpdate) {
             massUpdatePools();
         }
@@ -163,6 +167,7 @@ contract MasterChef is Ownable {
                 accRewardTokenPerShare: 0
             })
         );
+        uniqueTokenInPool[_lpToken] = true;
     }
 
     // Update the given pool's REWARD_TOKEN allocation point. Can only be called by the owner.
