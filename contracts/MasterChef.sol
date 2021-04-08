@@ -73,7 +73,7 @@ contract MasterChef is Ownable {
     uint256 public endRewardBlock;
 
     //user can get reward and unstake after this time only.
-    uint256 public unstakeFrozenTime = 72 hours;
+    uint256 public unstakeFrozenTime = 0; // No froze time initially, if needed it can be added and informed to community.
 
     event Deposit(address indexed user, uint256 indexed pid, uint256 amount);
     event Withdraw(address indexed user, uint256 indexed pid, uint256 amount);
