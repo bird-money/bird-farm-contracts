@@ -7,18 +7,9 @@ const localDeployScript = async (
   });
   console.log('MockERC20.address: ', MockERC20.address);
 
-  await deployer.deploy(
-    MasterChef,
-    MockERC20.address,
-    //dev,
-    '1000', // reward tokens per block
-    '100', //start reward block
-    '10000', //end reward block
-    '150', //end bonus reward block
-    {
-      from: minter,
-    }
-  );
+  await deployer.deploy(MockERC20.address, {
+    from: minter,
+  });
   console.log('MasterChef.address: ', MasterChef.address);
 };
 

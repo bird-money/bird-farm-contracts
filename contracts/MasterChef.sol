@@ -45,30 +45,36 @@ contract MasterChef is Ownable {
 
     // The REWARD_TOKEN TOKEN!
     IERC20 public rewardToken;
-    // Dev address.
-    // address public devaddr;
+
     // Block number when bonus REWARD_TOKEN period ends.
-    uint256 public bonusEndBlock;
+    uint256 public bonusEndBlock = 0;
+
     // REWARD_TOKEN tokens created per block.
-    uint256 public rewardTokenPerBlock;
+    uint256 public rewardTokenPerBlock = 1;
+
     // Bonus muliplier for early rewardToken makers.
     uint256 public constant BONUS_MULTIPLIER = 10;
 
     // Info of each pool.
     PoolInfo[] public poolInfo;
 
+    // To prevent a token to added in multiple pools
     mapping(IERC20 => bool) public uniqueTokenInPool;
 
     // Info of each user that stakes LP tokens.
     mapping(uint256 => mapping(address => UserInfo)) public userInfo;
+
+    // save pending rewards with respect to each pool id
+    mapping(address => uint256[]) public pendingRewardOf;
+
     // Total allocation poitns. Must be the sum of all allocation points in all pools.
     uint256 public totalAllocPoint = 0;
 
     // The block number when REWARD_TOKEN distribution starts.
-    uint256 public startRewardBlock;
+    uint256 public startRewardBlock = 0;
 
     // The block number when REWARD_TOKEN distribution stops.
-    uint256 public endRewardBlock;
+    uint256 public endRewardBlock = 1 * 1e18 * 1e18 * 1e18;
 
     //user can get reward and unstake after this time only.
     uint256 public unstakeFrozenTime = 0; // No froze time initially, if needed it can be added and informed to community.
@@ -81,65 +87,8 @@ contract MasterChef is Ownable {
         uint256 amount
     );
 
-    constructor(
-        IERC20 _rewardToken,
-        uint256 _rewardTokenPerBlock,
-        uint256 _startRewardBlock,
-        uint256 _endRewardBlock,
-        uint256 _bonusEndBlock
-    ) public {
+    constructor(IERC20 _rewardToken) public {
         rewardToken = _rewardToken;
-        rewardTokenPerBlock = _rewardTokenPerBlock;
-        startRewardBlock = _startRewardBlock;
-        endRewardBlock = _endRewardBlock;
-        bonusEndBlock = _bonusEndBlock;
-    }
-
-    function setAll(
-        IERC20 _rewardToken,
-        uint256 _rewardTokenPerBlock,
-        uint256 _startRewardBlock,
-        uint256 _endRewardBlock,
-        uint256 _bonusEndBlock,
-        uint256 _unstakeFrozenTime
-    ) public onlyOwner {
-        rewardToken = _rewardToken;
-        rewardTokenPerBlock = _rewardTokenPerBlock;
-        startRewardBlock = _startRewardBlock;
-        endRewardBlock = _endRewardBlock;
-        bonusEndBlock = _bonusEndBlock;
-        unstakeFrozenTime = _unstakeFrozenTime;
-    }
-
-    function setRewardToken(IERC20 _rewardToken) public onlyOwner {
-        rewardToken = _rewardToken;
-    }
-
-    function setUnstakeFrozenTime(uint256 _unstakeFrozenTime) public onlyOwner {
-        unstakeFrozenTime = _unstakeFrozenTime;
-    }
-
-    function setRewardTokenPerBlock(uint256 _rewardTokenPerBlock)
-        public
-        onlyOwner
-    {
-        rewardTokenPerBlock = _rewardTokenPerBlock;
-    }
-
-    function setStartRewardBlock(uint256 _startRewardBlock) public onlyOwner {
-        startRewardBlock = _startRewardBlock;
-    }
-
-    function setEndRewardBlock(uint256 _endRewardBlock) public onlyOwner {
-        endRewardBlock = _endRewardBlock;
-    }
-
-    function setBonusEndBlock(uint256 _bonusEndBlock) public onlyOwner {
-        bonusEndBlock = _bonusEndBlock;
-    }
-
-    function poolLength() external view returns (uint256) {
-        return poolInfo.length;
     }
 
     // Add a new lp to the pool. Can only be called by the owner.
@@ -210,7 +159,12 @@ contract MasterChef is Ownable {
         UserInfo storage user = userInfo[_pid][_user];
         uint256 accRewardTokenPerShare = pool.accRewardTokenPerShare;
         uint256 lpSupply = pool.lpToken.balanceOf(address(this));
-        if (block.number > pool.lastRewardBlock && lpSupply != 0) {
+        if (
+            block.number > pool.lastRewardBlock &&
+            lpSupply != 0 &&
+            block.number >= startRewardBlock &&
+            block.number <= endRewardBlock
+        ) {
             uint256 multiplier =
                 getMultiplier(pool.lastRewardBlock, block.number);
             uint256 rewardTokenReward =
@@ -259,25 +213,20 @@ contract MasterChef is Ownable {
 
     // Deposit LP tokens to MasterChef for REWARD_TOKEN allocation.
     function deposit(uint256 _pid, uint256 _amount) public {
+        require(_amount > 0, "Must deposit amount more than ZERO");
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][msg.sender];
         updatePool(_pid);
-        if (user.amount > 0) {
-            uint256 pending =
-                user.amount.mul(pool.accRewardTokenPerShare).div(1e12).sub(
-                    user.rewardDebt
-                );
-            if (now > user.unstakeTime)
-                rewardTokenTransfer(msg.sender, pending);
-        }
-
-        if (_amount > 0) user.unstakeTime = now + unstakeFrozenTime;
-
+        uint256 pending =
+            user.amount.mul(pool.accRewardTokenPerShare).div(1e12).sub(
+                user.rewardDebt
+            );
+        savePendingReward(msg.sender, _pid, pending);
+        user.unstakeTime = now + unstakeFrozenTime;
         user.amount = user.amount.add(_amount);
         user.rewardDebt = user.amount.mul(pool.accRewardTokenPerShare).div(
             1e12
         );
-
         pool.lpToken.transferFrom(address(msg.sender), address(this), _amount);
         emit Deposit(msg.sender, _pid, _amount);
     }
@@ -294,7 +243,7 @@ contract MasterChef is Ownable {
                 user.amount.mul(pool.accRewardTokenPerShare).div(1e12).sub(
                     user.rewardDebt
                 );
-            rewardTokenTransfer(msg.sender, pending);
+            savePendingReward(msg.sender, _pid, pending);
             user.amount = user.amount.sub(_amount);
             user.rewardDebt = user.amount.mul(pool.accRewardTokenPerShare).div(
                 1e12
@@ -315,9 +264,7 @@ contract MasterChef is Ownable {
     }
 
     function rewardTokenTransfer(address _to, uint256 _amount) internal {
-        if (
-            block.number >= startRewardBlock && block.number <= endRewardBlock
-        ) {
+        {
             uint256 rewardTokenBal = rewardToken.balanceOf(address(this));
             if (_amount > rewardTokenBal) {
                 rewardToken.transfer(_to, rewardTokenBal);
@@ -327,10 +274,32 @@ contract MasterChef is Ownable {
         }
     }
 
-    IMigratorChef public migrator;
+    function savePendingReward(
+        address _user,
+        uint256 _pid,
+        uint256 _amount
+    ) internal {
+        pendingRewardOf[_user][_pid] = pendingRewardOf[_user][_pid] + _amount;
+    }
 
-    function setMigrator(IMigratorChef _migrator) public onlyOwner {
-        migrator = _migrator;
+    function harvestPendingReward(uint256 _pid) public {
+        PoolInfo storage pool = poolInfo[_pid];
+        UserInfo storage user = userInfo[_pid][msg.sender];
+        updatePool(_pid);
+        uint256 pending =
+            user.amount.mul(pool.accRewardTokenPerShare).div(1e12).sub(
+                user.rewardDebt
+            );
+        savePendingReward(msg.sender, _pid, pending);
+        user.rewardDebt = user.amount.mul(pool.accRewardTokenPerShare).div(
+            1e12
+        );
+
+        require(
+            block.number >= startRewardBlock && block.number <= endRewardBlock,
+            "You can not harvest before startRewardBlock or after endRewardBlock"
+        );
+        rewardToken.transfer(msg.sender, pendingRewardOf[msg.sender][_pid]);
     }
 
     function depositRewardTokens(uint256 _amount) public onlyOwner {
@@ -339,6 +308,66 @@ contract MasterChef is Ownable {
 
     function withdrawRewardTokens(uint256 _amount) public onlyOwner {
         rewardToken.transfer(msg.sender, _amount);
+    }
+
+    // getters
+    function getReward(uint256 _pid) public view returns (uint256) {
+        return pendingRewardOf[msg.sender][_pid];
+    }
+
+    function poolLength() external view returns (uint256) {
+        return poolInfo.length;
+    }
+
+    // setters
+    function setAll(
+        IERC20 _rewardToken,
+        uint256 _rewardTokenPerBlock,
+        uint256 _startRewardBlock,
+        uint256 _endRewardBlock,
+        uint256 _bonusEndBlock,
+        uint256 _unstakeFrozenTime
+    ) public onlyOwner {
+        rewardToken = _rewardToken;
+        rewardTokenPerBlock = _rewardTokenPerBlock;
+        startRewardBlock = _startRewardBlock;
+        endRewardBlock = _endRewardBlock;
+        bonusEndBlock = _bonusEndBlock;
+        unstakeFrozenTime = _unstakeFrozenTime;
+    }
+
+    function setRewardToken(IERC20 _rewardToken) public onlyOwner {
+        rewardToken = _rewardToken;
+    }
+
+    function setUnstakeFrozenTime(uint256 _unstakeFrozenTime) public onlyOwner {
+        unstakeFrozenTime = _unstakeFrozenTime;
+    }
+
+    function setRewardTokenPerBlock(uint256 _rewardTokenPerBlock)
+        public
+        onlyOwner
+    {
+        rewardTokenPerBlock = _rewardTokenPerBlock;
+    }
+
+    function setStartRewardBlock(uint256 _startRewardBlock) public onlyOwner {
+        startRewardBlock = _startRewardBlock;
+    }
+
+    function setEndRewardBlock(uint256 _endRewardBlock) public onlyOwner {
+        endRewardBlock = _endRewardBlock;
+    }
+
+    function setBonusEndBlock(uint256 _bonusEndBlock) public onlyOwner {
+        bonusEndBlock = _bonusEndBlock;
+    }
+
+    // migrator
+    IMigratorChef public migrator;
+
+    function setMigrator(IMigratorChef _migrator) public onlyOwner {
+        migrator = _migrator;
     }
 }
 
