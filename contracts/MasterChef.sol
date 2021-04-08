@@ -264,6 +264,7 @@ contract MasterChef is Ownable {
 
     // Deposit LP tokens to MasterChef for REWARD_TOKEN allocation.
     function deposit(uint256 _pid, uint256 _amount) public {
+        require(_amount > 0, "not allowed to deposit 0");
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][msg.sender];
         updatePool(_pid);
