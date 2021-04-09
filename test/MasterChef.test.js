@@ -10,12 +10,10 @@ contract('MasterChef', ([alice, bob, carol, dev, minter]) => {
     this.lp1 = await MockBEP20.new('LPToken', 'LP1', '1000000', {
       from: minter,
     });
-    console.log('this.lp1', this.lp1.address);
 
     this.lp2 = await MockBEP20.new('LPToken', 'LP2', '1000000', {
       from: minter,
     });
-    console.log('this.lp2', this.lp2.address);
 
     this.lp3 = await MockBEP20.new('LPToken', 'LP3', '1000000', {
       from: minter,
@@ -59,24 +57,25 @@ contract('MasterChef', ([alice, bob, carol, dev, minter]) => {
     this.lp9 = await MockBEP20.new('LPToken', 'LP3', '1000000', {
       from: minter,
     });
+    //await this.chef.add('8000', this.lp1.address, true, { from: minter });
     await this.chef.add('2000', this.lp1.address, true, { from: minter });
-    await this.chef.add('2000', this.lp1.address, true, { from: minter });
-    await this.chef.add('1000', this.lp2.address, true, { from: minter });
-    await this.chef.add('500', this.lp3.address, true, { from: minter });
-    await this.chef.add('500', this.lp3.address, true, { from: minter });
-    await this.chef.add('500', this.lp3.address, true, { from: minter });
-    await this.chef.add('500', this.lp3.address, true, { from: minter });
-    await this.chef.add('500', this.lp3.address, true, { from: minter });
-    await this.chef.add('100', this.lp3.address, true, { from: minter });
-    await this.chef.add('100', this.lp3.address, true, { from: minter });
-    assert.equal((await this.chef.poolLength()).toString(), '10');
+    await this.chef.add('1500', this.lp2.address, true, { from: minter });
+    await this.chef.add('250', this.lp2.address, true, { from: minter });
+    await this.chef.add('200', this.lp3.address, true, { from: minter });
+    await this.chef.add('50', this.lp3.address, true, { from: minter });
+    // await this.chef.add('500', this.lp3.address, true, { from: minter });
+    // await this.chef.add('500', this.lp3.address, true, { from: minter });
+    // await this.chef.add('500', this.lp3.address, true, { from: minter });
+    // await this.chef.add('100', this.lp3.address, true, { from: minter });
+    // await this.chef.add('100', this.lp3.address, true, { from: minter });
+    // assert.equal((await this.chef.poolLength()).toString(), '10');
 
-    await time.advanceBlockTo('170');
     await this.lp1.approve(this.chef.address, '1000', { from: alice });
     assert.equal((await this.usdt.balanceOf(alice)).toString(), '0');
-    await this.chef.deposit(1, '20', { from: alice });
-    await this.chef.withdraw(1, '20', { from: alice });
-    assert.equal((await this.usdt.balanceOf(alice)).toString(), '259');
+
+    await this.chef.deposit(0, '1000', { from: alice });
+    await this.chef.withdraw(0, '0', { from: alice });
+    assert.equal((await this.usdt.balanceOf(alice)).toString(), '500');
 
     // assert.equal((await this.chef.getPoolPoint(0, { from: minter })).toString(), '1900');
   });
