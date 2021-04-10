@@ -141,6 +141,11 @@ contract MasterChef is Ownable {
         return _to.sub(_from);
     }
 
+    /// @author Mary A. Botanist
+    /// @notice Calculate tree age in years, rounded up, for live trees
+    /// @dev The Alexandr N. Tetearing algorithm could increase precision
+    /// @param rings The number of rings from dendrochronological sample
+    /// @return age in years, rounded up for partial years
     // View function to see pending REWARD_TOKENs on frontend.
     function pendingRewardToken(uint256 _pid, address _user)
         external
@@ -325,6 +330,10 @@ contract MasterChef is Ownable {
         unstakeFrozenTime = _unstakeFrozenTime;
     }
 
+    function setRewardFrozenTime(uint256 _rewardFrozenTime) public onlyOwner {
+        rewardFrozenTime = _rewardFrozenTime;
+    }
+
     function setRewardTokenPerBlock(uint256 _rewardTokenPerBlock)
         public
         onlyOwner
@@ -361,7 +370,9 @@ interface IMigratorChef {
 }
 
 // Mazdoori / Labor work at end
-// adding comments
-// variable function names mashwra sir, youtube video or main contracts insdustry
+// adding comments nat spec https://docs.soliditylang.org/en/develop/natspec-format.html
 // making EVENTS
-// set external view
+// set external view to some functions
+// use return values i.e   require(rewardToken.transfer(), "Error occured during transfer")
+
+// variable function names mashwra sir, youtube video or main contracts insdustry
