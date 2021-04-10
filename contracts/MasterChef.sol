@@ -132,7 +132,7 @@ contract MasterChef is Ownable {
 
     // Return reward multiplier over the given _from to _to block.
     function getMultiplier(uint256 _from, uint256 _to)
-        public
+        internal
         view
         returns (uint256)
     {
@@ -170,7 +170,7 @@ contract MasterChef is Ownable {
     }
 
     // Update reward vairables for all pools. Be careful of gas spending!
-    function massUpdatePools() public {
+    function massUpdatePools() internal {
         uint256 length = poolInfo.length;
         for (uint256 pid = 0; pid < length; ++pid) {
             updatePool(pid);
@@ -178,7 +178,7 @@ contract MasterChef is Ownable {
     }
 
     // Update reward variables of the given pool to be up-to-date.
-    function updatePool(uint256 _pid) public {
+    function updatePool(uint256 _pid) internal {
         PoolInfo storage pool = poolInfo[_pid];
 
         if (block.number < startRewardBlock || block.number > endRewardBlock) {
@@ -225,7 +225,7 @@ contract MasterChef is Ownable {
             1e12
         );
         pool.lpToken.transferFrom(address(msg.sender), address(this), _amount);
-        emit Deposit(msg.sender, _pid, _amount);
+        // emit Deposit(msg.sender, _pid, _amount);
     }
 
     // Withdraw LP tokens from MasterChef.
@@ -247,7 +247,7 @@ contract MasterChef is Ownable {
             1e12
         );
         pool.lpToken.transfer(address(msg.sender), _amount);
-        emit Withdraw(msg.sender, _pid, _amount);
+        // emit Withdraw(msg.sender, _pid, _amount);
     }
 
     // Withdraw without caring about rewards. EMERGENCY ONLY.
@@ -257,7 +257,7 @@ contract MasterChef is Ownable {
         user.amount = 0;
         user.rewardDebt = 0;
         pool.lpToken.transfer(address(msg.sender), user.amount);
-        emit EmergencyWithdraw(msg.sender, _pid, user.amount);
+        // emit EmergencyWithdraw(msg.sender, _pid, user.amount);
     }
 
     function savePendingReward(
@@ -359,3 +359,7 @@ contract MasterChef is Ownable {
 interface IMigratorChef {
     function migrate(IERC20 token) external returns (IERC20);
 }
+
+// Mazdoori / Labor work at end
+// adding comments
+// making EVENTS
