@@ -7,27 +7,23 @@ contract('MasterChef', ([alice, bob, carol, dev, minter]) => {
     this.usdt = await MockBEP20.new('USDT', 'USDT', '100000000000', {
       from: minter,
     });
+
+    this.chef = await MasterChef.new(this.usdt.address, {
+      from: minter,
+    });
+    await this.usdt.transfer(this.chef.address, '1000000', { from: minter });
+
     this.lp1 = await MockBEP20.new('LPToken', 'LP1', '1000000', {
       from: minter,
     });
-    console.log('this.lp1', this.lp1.address);
 
     this.lp2 = await MockBEP20.new('LPToken', 'LP2', '1000000', {
       from: minter,
     });
-    console.log('this.lp2', this.lp2.address);
 
     this.lp3 = await MockBEP20.new('LPToken', 'LP3', '1000000', {
       from: minter,
     });
-    this.chef = await MasterChef.new(this.usdt.address, {
-      from: minter,
-    });
-    //await this.usdt.transferOwnership(this.chef.address, { from: minter });
-    // this.usdt = await MockBEP20.new('USDT', 'USDT', '1000000', {
-    //   from: minter,
-    // });
-    await this.usdt.transfer(this.chef.address, '1000000', { from: minter });
 
     await this.lp1.transfer(bob, '2000', { from: minter });
     await this.lp2.transfer(bob, '2000', { from: minter });
@@ -57,11 +53,9 @@ contract('MasterChef', ([alice, bob, carol, dev, minter]) => {
       from: minter,
     });
     await this.chef.add('2000', this.lp1.address, true, { from: minter });
-    await this.chef.add('1000', this.lp2.address, true, { from: minter });
-    await this.chef.add('500', this.lp3.address, true, { from: minter });
-    assert.equal((await this.chef.poolLength()).toString(), '3');
+    // await this.chef.add('1000', this.lp2.address, true, { from: minter });
+    // await this.chef.add('500', this.lp3.address, true, { from: minter });
 
-    await time.advanceBlock('10');
     await this.lp1.approve(this.chef.address, '1000', { from: alice });
     await this.lp3.approve(this.chef.address, '1000', { from: alice });
     assert.equal((await this.usdt.balanceOf(alice)).toString(), '0');
@@ -71,10 +65,13 @@ contract('MasterChef', ([alice, bob, carol, dev, minter]) => {
     );
 
     await this.chef.deposit(0, '10', { from: alice });
+    //await this.chef.deposit(0, '10', { from: alice });
+    //await this.chef.pendingRewardToken(0, alice);
+    await this.chef.harvestPendingReward(0, { from: alice });
     // await this.chef.deposit(1, '20', { from: alice });
     // await this.chef.withdraw(1, '10', { from: alice });
     console.log(
-      'alice balance usdt before deposit lp tokens: ',
+      'alice balance usdt after deposit lp tokens: ',
       (await this.usdt.balanceOf(alice)).toString()
     );
 

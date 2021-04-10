@@ -1,0 +1,158 @@
+muneeb   d9b8bc5  ~  work  Bird Money  bird-farm-contracts  git log
+commit d9b8bc51da5625708df77b974be852d89c122a89 (HEAD)
+Author: moneybirdmi <money.bird.mi@gmail.com>
+Date:   Thu Apr 8 18:41:22 2021 +0500
+
+    small fixes
+
+commit aeac4b6e1f2505dda791eed84b0c4f12675f793e (origin/master, origin/HEAD)
+Merge: 7fdad1b f03606f
+Author: moneybirdmi <money.bird.mi@gmail.com>
+Date:   Thu Apr 8 17:05:26 2021 +0500
+
+    Merge branch 'audit-fix'
+
+commit 7fdad1b7740e19d88d1827cc62ed73c211c0dfa5
+Author: moneybirdmi <money.bird.mi@gmail.com>
+Date:   Thu Apr 8 16:36:13 2021 +0500
+
+    transfer method
+
+commit f03606f82b23af2191b0c0f2f5e9599276a99e5a (origin/audit-fix, audit-fix)
+Author: mleoanbarasan <leo@aequalisys.com>
+Date:   Thu Apr 8 16:38:25 2021 +0530
+
+    Fixed: 4. Unstake Time increases 72 hrs with every new deposit
+
+commit a89e87c4a5512037c7b3db38e066d5178e0f1b06
+Author: mleoanbarasan <leo@aequalisys.com>
+Date:   Thu Apr 8 16:34:21 2021 +0530
+
+    Fixed: 5. User is capable of depositing ZERO amount of LP Tokens
+
+commit 5c3b57197bd31df8fae6f38e481440909180b3de
+Author: mleoanbarasan <leo@aequalisys.com>
+Date:   Thu Apr 8 16:22:49 2021 +0530
+
+    Fixed: 3. Contract State Variables are being updated after External Calls
+
+commit 713303640a639c6685a7290ad75e921cdc4aaf45
+Author: mleoanbarasan <leo@aequalisys.com>
+Date:   Thu Apr 8 15:09:45 2021 +0530
+
+    Ignoring build files
+
+commit 8587f9cf7235bdc723197cc680e9ea092501e7f9
+Author: mleoanbarasan <leo@aequalisys.com>
+Date:   Thu Apr 8 15:08:57 2021 +0530
+
+    Removed build contracts json
+
+commit a2f0e2ab89541bd26e858fe39246e86a328c7f63
+Author: mleoanbarasan <leo@aequalisys.com>
+Date:   Thu Apr 8 15:08:13 2021 +0530
+
+    Fixed: Similar LP Token Address can be added more than once
+
+commit 97653c8d25e9cdd0f0c6863bc5cc9434f3d7110e
+Author: moneybirdmi <money.bird.mi@gmail.com>
+Date:   Thu Apr 1 10:19:16 2021 +0500
+
+    usdt address in mainnetscript
+
+commit dfd2502b73c8f54c9081682c3eb070fcd3c00629
+Author: moneybirdmi <money.bird.mi@gmail.com>
+Date:   Tue Mar 30 13:00:04 2021 +0500
+
+    added setter for unstake frozen time in MasterChef.sol and deployed to kovan from command: yarn deploy
+
+commit 449ab46d81b0ba22514f55c65ec1db5a382a664c
+Author: moneybirdmi <money.bird.mi@gmail.com>
+Date:   Tue Mar 30 12:18:26 2021 +0500
+
+    wrote mainnet script
+
+commit f2e4bc24c692bef7e7dfb5b0840fa0db6d0b6d11
+Author: moneybirdmi <money.bird.mi@gmail.com>
+Date:   Tue Mar 30 12:04:09 2021 +0500
+
+    deployed to kovan
+
+commit e82e8708d90c4039da699dde170f9b0777fb4f24
+Author: moneybirdmi <money.bird.mi@gmail.com>
+Date:   Mon Mar 29 19:13:22 2021 +0500
+
+    added functions depositReward, withdrawReward
+
+commit ffeb99857e626e5072c5dfb6209a9560f4149fb7
+Author: moneybirdmi <money.bird.mi@gmail.com>
+Date:   Mon Mar 29 18:55:40 2021 +0500
+
+    added setters for many values
+
+commit f67f3553deaba5ed16d637fe18a2a1c17216ea30
+Author: moneybirdmi <money.bird.mi@gmail.com>
+Date:   Mon Mar 29 17:10:53 2021 +0500
+
+    test of unstake time is working fine
+
+commit c9f9213e93c43c45a6551a483b014deef54e6162
+Author: moneybirdmi <money.bird.mi@gmail.com>
+Date:   Mon Mar 29 16:49:50 2021 +0500
+
+    added unstake frozen time logic. can get reward after unstake frozen time.
+
+commit a529d5d2cdf7fc3cf563215308e15de7c2bd00e2
+Author: moneybirdmi <money.bird.mi@gmail.com>
+Date:   Mon Mar 29 16:40:03 2021 +0500
+
+    added back IMigratorChef
+
+commit 5d6032b794de893873987bc071acc8ff28e17e8f
+Author: moneybirdmi <money.bird.mi@gmail.com>
+Date:   Mon Mar 29 16:28:08 2021 +0500
+
+    commented devaddr in contract and test
+
+commit 7562c8a83543977140b02412c081de33756723ff
+Author: moneybirdmi <money.bird.mi@gmail.com>
+Date:   Mon Mar 29 16:23:35 2021 +0500
+
+    added start / end reward block
+
+commit a76457775a20bbea641e6ad25dfb878cd6d62bc8
+Author: moneybirdmi <money.bird.mi@gmail.com>
+Date:   Mon Mar 29 16:04:46 2021 +0500
+
+    stopped minting reward token. now admin sends reward tokens to contract. test case working fine.
+
+commit 1ddfe320ee73e44d69346252c619f789acfdda35
+Author: moneybirdmi <money.bird.mi@gmail.com>
+Date:   Mon Mar 29 15:58:02 2021 +0500
+Date:   Mon Mar 29 16:23:35 2021 +0500
+
+    added start / end reward block
+
+commit a76457775a20bbea641e6ad25dfb878cd6d62bc8
+Author: moneybirdmi <money.bird.mi@gmail.com>
+Date:   Mon Mar 29 16:04:46 2021 +0500
+
+    stopped minting reward token. now admin sends reward tokens to contract. test case work
+ing fine.
+
+commit 1ddfe320ee73e44d69346252c619f789acfdda35
+Author: moneybirdmi <money.bird.mi@gmail.com>
+Date:   Mon Mar 29 15:58:02 2021 +0500
+
+    changed variable names from sushi to rewardToken. Test is working fine. i.e "truffle develop" the "test"
+
+commit 3bee0452e6feb5a2e063a26220da01fd2b0f381f
+Author: moneybirdmi <money.bird.mi@gmail.com>
+Date:   Mon Mar 29 15:08:05 2021 +0500
+
+    test case working pecfect. you can see this commit code by using command: git checkout thisCommitHash
+
+commit 9b298e9f7a001800e0e16002c59727311b8b74bb
+Author: moneybirdmi <money.bird.mi@gmail.com>
+Date:   Mon Mar 29 14:50:46 2021 +0500
+:

@@ -1,17 +1,7 @@
 const localDeployScript = async (
   deployer,
   [alice, bob, carol, dev, minter]
-) => {
-  await deployer.deploy(MockERC20, 'USDT', 'USDT', '100000000000', {
-    from: minter,
-  });
-  console.log('MockERC20.address: ', MockERC20.address);
-
-  await deployer.deploy(MockERC20.address, {
-    from: minter,
-  });
-  console.log('MasterChef.address: ', MasterChef.address);
-};
+) => {};
 
 const kovanDeployScript = async (
   deployer,

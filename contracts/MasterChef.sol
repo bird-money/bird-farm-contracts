@@ -17,6 +17,53 @@ pragma solidity 0.6.12;
 contract MasterChef is Ownable {
     using SafeMath for uint256;
 
+    //user can get reward and unstake after this time only.
+    uint256 public unstakeFrozenTime = 0; // No froze time initially, if needed it can be added and informed to community.
+
+    uint256 public rewardFrozenTime = 0; // No froze time initially, if needed it can be added and informed to community.
+
+    // The block number when REWARD_TOKEN distribution starts.
+    uint256 public startRewardBlock = 0;
+
+    // The block number when REWARD_TOKEN distribution stops.
+    uint256 public endRewardBlock = MAX_UINT; // MAX UINT
+
+    // REWARD_TOKEN tokens created per block.
+    uint256 public rewardTokenPerBlock = 100;
+
+    // The REWARD_TOKEN TOKEN!
+    IERC20 public rewardToken;
+
+    // Info of each pool.
+    PoolInfo[] public poolInfo;
+
+    // To prevent a token to added in multiple pools
+    mapping(IERC20 => bool) public uniqueTokenInPool;
+
+    // Info of each user that stakes LP tokens.
+    mapping(uint256 => mapping(address => UserInfo)) public userInfo;
+
+    // save pending rewards with respect to each pool id
+    //  user_address  =>  ( pool_id => pendingReward)
+    mapping(address => mapping(uint256 => uint256)) public pendingRewardOf;
+
+    // Total allocation poitns. Must be the sum of all allocation points in all pools.
+    uint256 public totalAllocPoint = 0;
+
+    uint256 public constant MAX_UINT = type(uint256).max;
+
+    event Deposit(address indexed user, uint256 indexed pid, uint256 amount);
+    event Withdraw(address indexed user, uint256 indexed pid, uint256 amount);
+    event EmergencyWithdraw(
+        address indexed user,
+        uint256 indexed pid,
+        uint256 amount
+    );
+
+    constructor(IERC20 _rewardToken) public {
+        rewardToken = _rewardToken;
+    }
+
     // Info of each user.
     struct UserInfo {
         uint256 amount; // How many LP tokens the user has provided.
@@ -41,54 +88,6 @@ contract MasterChef is Ownable {
         uint256 allocPoint; // How many allocation points assigned to this pool. REWARD_TOKENs to distribute per block.
         uint256 lastRewardBlock; // Last block number that REWARD_TOKENs distribution occurs.
         uint256 accRewardTokenPerShare; // Accumulated REWARD_TOKENs per share, times 1e12. See below.
-    }
-
-    // The REWARD_TOKEN TOKEN!
-    IERC20 public rewardToken;
-
-    // Block number when bonus REWARD_TOKEN period ends.
-    uint256 public bonusEndBlock = 0;
-
-    // REWARD_TOKEN tokens created per block.
-    uint256 public rewardTokenPerBlock = 1;
-
-    // Bonus muliplier for early rewardToken makers.
-    uint256 public constant BONUS_MULTIPLIER = 10;
-
-    // Info of each pool.
-    PoolInfo[] public poolInfo;
-
-    // To prevent a token to added in multiple pools
-    mapping(IERC20 => bool) public uniqueTokenInPool;
-
-    // Info of each user that stakes LP tokens.
-    mapping(uint256 => mapping(address => UserInfo)) public userInfo;
-
-    // save pending rewards with respect to each pool id
-    mapping(address => uint256[]) public pendingRewardOf;
-
-    // Total allocation poitns. Must be the sum of all allocation points in all pools.
-    uint256 public totalAllocPoint = 0;
-
-    // The block number when REWARD_TOKEN distribution starts.
-    uint256 public startRewardBlock = 0;
-
-    // The block number when REWARD_TOKEN distribution stops.
-    uint256 public endRewardBlock = 1 * 1e18 * 1e18 * 1e18;
-
-    //user can get reward and unstake after this time only.
-    uint256 public unstakeFrozenTime = 0; // No froze time initially, if needed it can be added and informed to community.
-
-    event Deposit(address indexed user, uint256 indexed pid, uint256 amount);
-    event Withdraw(address indexed user, uint256 indexed pid, uint256 amount);
-    event EmergencyWithdraw(
-        address indexed user,
-        uint256 indexed pid,
-        uint256 amount
-    );
-
-    constructor(IERC20 _rewardToken) public {
-        rewardToken = _rewardToken;
     }
 
     // Add a new lp to the pool. Can only be called by the owner.
@@ -137,16 +136,9 @@ contract MasterChef is Ownable {
         view
         returns (uint256)
     {
-        if (_to <= bonusEndBlock) {
-            return _to.sub(_from).mul(BONUS_MULTIPLIER);
-        } else if (_from >= bonusEndBlock) {
-            return _to.sub(_from);
-        } else {
-            return
-                bonusEndBlock.sub(_from).mul(BONUS_MULTIPLIER).add(
-                    _to.sub(bonusEndBlock)
-                );
-        }
+        _from = _from < startRewardBlock ? startRewardBlock : _from;
+        _to = _to > endRewardBlock ? endRewardBlock : _to;
+        return _to.sub(_from);
     }
 
     // View function to see pending REWARD_TOKENs on frontend.
@@ -159,22 +151,18 @@ contract MasterChef is Ownable {
         UserInfo storage user = userInfo[_pid][_user];
         uint256 accRewardTokenPerShare = pool.accRewardTokenPerShare;
         uint256 lpSupply = pool.lpToken.balanceOf(address(this));
-        if (
-            block.number > pool.lastRewardBlock &&
-            lpSupply != 0 &&
-            block.number >= startRewardBlock &&
-            block.number <= endRewardBlock
-        ) {
-            uint256 multiplier =
-                getMultiplier(pool.lastRewardBlock, block.number);
-            uint256 rewardTokenReward =
-                multiplier.mul(rewardTokenPerBlock).mul(pool.allocPoint).div(
-                    totalAllocPoint
-                );
-            accRewardTokenPerShare = accRewardTokenPerShare.add(
-                rewardTokenReward.mul(1e12).div(lpSupply)
-            );
-        }
+
+        uint256 multiplier = getMultiplier(pool.lastRewardBlock, block.number);
+        uint256 rewardTokenReward =
+            multiplier
+                .mul(rewardTokenPerBlock)
+                .mul(pool.allocPoint)
+                .mul(1e12)
+                .div(totalAllocPoint);
+        accRewardTokenPerShare = accRewardTokenPerShare.add(
+            rewardTokenReward.div(lpSupply)
+        );
+
         return
             user.amount.mul(accRewardTokenPerShare).div(1e12).sub(
                 user.rewardDebt
@@ -192,9 +180,11 @@ contract MasterChef is Ownable {
     // Update reward variables of the given pool to be up-to-date.
     function updatePool(uint256 _pid) public {
         PoolInfo storage pool = poolInfo[_pid];
-        if (block.number <= pool.lastRewardBlock) {
+
+        if (block.number < startRewardBlock || block.number > endRewardBlock) {
             return;
         }
+
         uint256 lpSupply = pool.lpToken.balanceOf(address(this));
         if (lpSupply == 0) {
             pool.lastRewardBlock = block.number;
@@ -202,11 +192,13 @@ contract MasterChef is Ownable {
         }
         uint256 multiplier = getMultiplier(pool.lastRewardBlock, block.number);
         uint256 rewardTokenReward =
-            multiplier.mul(rewardTokenPerBlock).mul(pool.allocPoint).div(
-                totalAllocPoint
-            );
+            multiplier
+                .mul(rewardTokenPerBlock)
+                .mul(pool.allocPoint)
+                .mul(1e12)
+                .div(totalAllocPoint);
         pool.accRewardTokenPerShare = pool.accRewardTokenPerShare.add(
-            rewardTokenReward.mul(1e12).div(lpSupply)
+            rewardTokenReward.div(lpSupply)
         );
         pool.lastRewardBlock = block.number;
     }
@@ -216,13 +208,18 @@ contract MasterChef is Ownable {
         require(_amount > 0, "Must deposit amount more than ZERO");
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][msg.sender];
+        require(
+            pool.lpToken.balanceOf(msg.sender) >= _amount,
+            "Must deposit amount more than ZERO"
+        );
         updatePool(_pid);
+
         uint256 pending =
             user.amount.mul(pool.accRewardTokenPerShare).div(1e12).sub(
                 user.rewardDebt
             );
         savePendingReward(msg.sender, _pid, pending);
-        user.unstakeTime = now + unstakeFrozenTime;
+        if (user.amount == 0) user.unstakeTime = now + unstakeFrozenTime;
         user.amount = user.amount.add(_amount);
         user.rewardDebt = user.amount.mul(pool.accRewardTokenPerShare).div(
             1e12
@@ -233,24 +230,24 @@ contract MasterChef is Ownable {
 
     // Withdraw LP tokens from MasterChef.
     function withdraw(uint256 _pid, uint256 _amount) public {
+        require(_amount > 0, "Must withdraw amount more than ZERO");
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][msg.sender];
         require(user.amount >= _amount, "withdraw: not good");
+        require(now > user.unstakeTime, "Can not unstake at this time.");
 
-        if (now > user.unstakeTime) {
-            updatePool(_pid);
-            uint256 pending =
-                user.amount.mul(pool.accRewardTokenPerShare).div(1e12).sub(
-                    user.rewardDebt
-                );
-            savePendingReward(msg.sender, _pid, pending);
-            user.amount = user.amount.sub(_amount);
-            user.rewardDebt = user.amount.mul(pool.accRewardTokenPerShare).div(
-                1e12
+        updatePool(_pid);
+        uint256 pending =
+            user.amount.mul(pool.accRewardTokenPerShare).div(1e12).sub(
+                user.rewardDebt
             );
-            pool.lpToken.transfer(address(msg.sender), _amount);
-            emit Withdraw(msg.sender, _pid, _amount);
-        }
+        savePendingReward(msg.sender, _pid, pending);
+        user.amount = user.amount.sub(_amount);
+        user.rewardDebt = user.amount.mul(pool.accRewardTokenPerShare).div(
+            1e12
+        );
+        pool.lpToken.transfer(address(msg.sender), _amount);
+        emit Withdraw(msg.sender, _pid, _amount);
     }
 
     // Withdraw without caring about rewards. EMERGENCY ONLY.
@@ -261,17 +258,6 @@ contract MasterChef is Ownable {
         user.rewardDebt = 0;
         pool.lpToken.transfer(address(msg.sender), user.amount);
         emit EmergencyWithdraw(msg.sender, _pid, user.amount);
-    }
-
-    function rewardTokenTransfer(address _to, uint256 _amount) internal {
-        {
-            uint256 rewardTokenBal = rewardToken.balanceOf(address(this));
-            if (_amount > rewardTokenBal) {
-                rewardToken.transfer(_to, rewardTokenBal);
-            } else {
-                rewardToken.transfer(_to, _amount);
-            }
-        }
     }
 
     function savePendingReward(
@@ -285,28 +271,25 @@ contract MasterChef is Ownable {
     function harvestPendingReward(uint256 _pid) public {
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][msg.sender];
+        require(user.amount > 0, "You have to stake tokens to get reward.");
+        require(now > rewardFrozenTime, "Can not collect reward at this time.");
+
         updatePool(_pid);
         uint256 pending =
             user.amount.mul(pool.accRewardTokenPerShare).div(1e12).sub(
                 user.rewardDebt
             );
         savePendingReward(msg.sender, _pid, pending);
-        user.rewardDebt = user.amount.mul(pool.accRewardTokenPerShare).div(
-            1e12
-        );
 
-        require(
-            block.number >= startRewardBlock && block.number <= endRewardBlock,
-            "You can not harvest before startRewardBlock or after endRewardBlock"
-        );
-        rewardToken.transfer(msg.sender, pendingRewardOf[msg.sender][_pid]);
+        rewardToken.transfer(msg.sender, getReward(_pid));
     }
 
-    function depositRewardTokens(uint256 _amount) public onlyOwner {
+    // only for Owner
+    function addRewardTokensToContract(uint256 _amount) public onlyOwner {
         rewardToken.transferFrom(msg.sender, address(this), _amount);
     }
 
-    function withdrawRewardTokens(uint256 _amount) public onlyOwner {
+    function getRewardTokensFromContract(uint256 _amount) public onlyOwner {
         rewardToken.transfer(msg.sender, _amount);
     }
 
@@ -325,14 +308,12 @@ contract MasterChef is Ownable {
         uint256 _rewardTokenPerBlock,
         uint256 _startRewardBlock,
         uint256 _endRewardBlock,
-        uint256 _bonusEndBlock,
         uint256 _unstakeFrozenTime
     ) public onlyOwner {
         rewardToken = _rewardToken;
         rewardTokenPerBlock = _rewardTokenPerBlock;
         startRewardBlock = _startRewardBlock;
         endRewardBlock = _endRewardBlock;
-        bonusEndBlock = _bonusEndBlock;
         unstakeFrozenTime = _unstakeFrozenTime;
     }
 
@@ -352,15 +333,19 @@ contract MasterChef is Ownable {
     }
 
     function setStartRewardBlock(uint256 _startRewardBlock) public onlyOwner {
+        require(
+            _startRewardBlock <= endRewardBlock,
+            "Start block must be less or equal to end reward block."
+        );
         startRewardBlock = _startRewardBlock;
     }
 
     function setEndRewardBlock(uint256 _endRewardBlock) public onlyOwner {
+        require(
+            startRewardBlock <= _endRewardBlock,
+            "End reward block must be greater or equal to start reward block."
+        );
         endRewardBlock = _endRewardBlock;
-    }
-
-    function setBonusEndBlock(uint256 _bonusEndBlock) public onlyOwner {
-        bonusEndBlock = _bonusEndBlock;
     }
 
     // migrator
