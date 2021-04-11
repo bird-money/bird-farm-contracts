@@ -13,7 +13,7 @@ const kovanDeployScript = async (
   await deployer.deploy(MockERC20, 'USDT', 'USDT', toWei('100'));
 
   await deployer.deploy(
-    MasterChef,
+    BirdFarm,
     MockERC20.address,
     //dev,
     '1000', // reward tokens per block
@@ -23,10 +23,10 @@ const kovanDeployScript = async (
   );
   console.log('LP Token MockERC20.address: ', lpAddr);
   console.log('USDT MockERC20.address: ', MockERC20.address);
-  console.log('MasterChef.address: ', MasterChef.address);
+  console.log('BirdFarm.address: ', BirdFarm.address);
 
   const usdt = await MockERC20.deployed();
-  await usdt.mint(MasterChef.address, toWei('100000'));
+  await usdt.mint(BirdFarm.address, toWei('100000'));
 };
 
 const mainnetDeployScript = async (
@@ -37,7 +37,7 @@ const mainnetDeployScript = async (
   console.log('usdt.address: ', usdt);
 
   await deployer.deploy(
-    MasterChef,
+    BirdFarm,
     usdt,
     //dev,
     '1000', // reward tokens per block
@@ -45,7 +45,7 @@ const mainnetDeployScript = async (
     '10000', //end reward block
     '150' //end bonus reward block
   );
-  console.log('MasterChef.address: ', MasterChef.address);
+  console.log('BirdFarm.address: ', BirdFarm.address);
 };
 
 module.exports = async (deployer, network, accounts) => {
@@ -69,7 +69,7 @@ module.exports = async (deployer, network, accounts) => {
   }
 };
 
-const toWei = (w) => web3.utils.toWei(w);
+const toWei = w => web3.utils.toWei(w);
 
-const MasterChef = artifacts.require('MasterChef');
+const BirdFarm = artifacts.require('BirdFarm');
 const MockERC20 = artifacts.require('MockERC20');
