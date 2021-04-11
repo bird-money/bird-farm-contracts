@@ -97,7 +97,7 @@ contract MasterChef is Ownable {
         uint256 _allocPoint,
         IERC20 _lpToken,
         bool _withUpdate
-    ) public onlyOwner {
+    ) external onlyOwner {
         require(!uniqueTokenInPool[_lpToken], "LP Token already added");
         if (_withUpdate) {
             massUpdatePools();
@@ -120,7 +120,7 @@ contract MasterChef is Ownable {
         uint256 _pid,
         uint256 _allocPoint,
         bool _withUpdate
-    ) public onlyOwner {
+    ) external onlyOwner {
         if (_withUpdate) {
             massUpdatePools();
         }
@@ -206,7 +206,7 @@ contract MasterChef is Ownable {
     }
 
     // Deposit LP tokens to MasterChef for REWARD_TOKEN allocation.
-    function deposit(uint256 _pid, uint256 _amount) public {
+    function deposit(uint256 _pid, uint256 _amount) external {
         require(_amount > 0, "Must deposit amount more than ZERO");
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][msg.sender];
@@ -214,10 +214,6 @@ contract MasterChef is Ownable {
             pool.lpToken.balanceOf(msg.sender) >= _amount,
             "Must deposit amount more than ZERO"
         );
-
-
-
-
 
         updatePool(_pid);
 
@@ -231,11 +227,11 @@ contract MasterChef is Ownable {
             1e12
         );
         pool.lpToken.transferFrom(address(msg.sender), address(this), _amount);
-        // // emit Deposit(msg.sender, _pid, _amount);
+        emit Deposit(msg.sender, _pid, _amount);
     }
 
     // Withdraw LP tokens from MasterChef.
-    function withdraw(uint256 _pid, uint256 _amount) public {
+    function withdraw(uint256 _pid, uint256 _amount) external {
         require(_amount > 0, "Must withdraw amount more than ZERO");
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][msg.sender];
@@ -252,19 +248,19 @@ contract MasterChef is Ownable {
             1e12
         );
         pool.lpToken.transfer(address(msg.sender), _amount);
-        // // emit Withdraw(msg.sender, _pid, _amount);
+        emit Withdraw(msg.sender, _pid, _amount);
     }
 
 
 
     // Withdraw without caring about rewards. EMERGENCY ONLY.
-    function emergencyWithdraw(uint256 _pid) public {
+    function emergencyWithdraw(uint256 _pid) external {
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][msg.sender];
         user.amount = 0;
         user.rewardDebt = 0;
         pool.lpToken.transfer(address(msg.sender), user.amount);
-        // // emit EmergencyWithdraw(msg.sender, _pid, user.amount);
+        emit EmergencyWithdraw(msg.sender, _pid, user.amount);
     }
 
     function savePendingReward(
@@ -275,7 +271,7 @@ contract MasterChef is Ownable {
         pendingRewardOf[_user][_pid] = pendingRewardOf[_user][_pid] + _amount;
     }
 
-    function harvestPendingReward(uint256 _pid) public {
+    function harvestPendingReward(uint256 _pid) external {
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][msg.sender];
         require(now >= rewardFrozenTime, "Can not collect reward at this time.");
@@ -294,11 +290,11 @@ contract MasterChef is Ownable {
     }
 
     // only for Owner
-    function addRewardTokensToContract(uint256 _amount) public onlyOwner {
+    function addRewardTokensToContract(uint256 _amount) external onlyOwner {
         rewardToken.transferFrom(msg.sender, address(this), _amount);
     }
 
-    function getRewardTokensFromContract(uint256 _amount) public onlyOwner {
+    function getRewardTokensFromContract(uint256 _amount) external onlyOwner {
         rewardToken.transfer(msg.sender, _amount);
     }
 
@@ -318,7 +314,7 @@ contract MasterChef is Ownable {
         uint256 _startRewardBlock,
         uint256 _endRewardBlock,
         uint256 _unstakeFrozenTime
-    ) public onlyOwner {
+    ) external onlyOwner {
         rewardToken = _rewardToken;
         rewardTokenPerBlock = _rewardTokenPerBlock;
         startRewardBlock = _startRewardBlock;
@@ -326,26 +322,26 @@ contract MasterChef is Ownable {
         unstakeFrozenTime = _unstakeFrozenTime;
     }
 
-    function setRewardToken(IERC20 _rewardToken) public onlyOwner {
+    function setRewardToken(IERC20 _rewardToken) external onlyOwner {
         rewardToken = _rewardToken;
     }
 
-    function setUnstakeFrozenTime(uint256 _unstakeFrozenTime) public onlyOwner {
+    function setUnstakeFrozenTime(uint256 _unstakeFrozenTime) external onlyOwner {
         unstakeFrozenTime = _unstakeFrozenTime;
     }
 
-    function setRewardFrozenTime(uint256 _rewardFrozenTime) public onlyOwner {
+    function setRewardFrozenTime(uint256 _rewardFrozenTime) external onlyOwner {
         rewardFrozenTime = _rewardFrozenTime;
     }
 
     function setRewardTokenPerBlock(uint256 _rewardTokenPerBlock)
-        public
+        external
         onlyOwner
     {
         rewardTokenPerBlock = _rewardTokenPerBlock;
     }
 
-    function setStartRewardBlock(uint256 _startRewardBlock) public onlyOwner {
+    function setStartRewardBlock(uint256 _startRewardBlock) external onlyOwner {
         require(
             _startRewardBlock <= endRewardBlock,
             "Start block must be less or equal to end reward block."
@@ -353,7 +349,7 @@ contract MasterChef is Ownable {
         startRewardBlock = _startRewardBlock;
     }
 
-    function setEndRewardBlock(uint256 _endRewardBlock) public onlyOwner {
+    function setEndRewardBlock(uint256 _endRewardBlock) external onlyOwner {
         require(
             startRewardBlock <= _endRewardBlock,
             "End reward block must be greater or equal to start reward block."
@@ -364,8 +360,20 @@ contract MasterChef is Ownable {
     // migrator
     IMigratorChef public migrator;
 
-    function setMigrator(IMigratorChef _migrator) public onlyOwner {
+    function setMigrator(IMigratorChef _migrator) external onlyOwner {
         migrator = _migrator;
+    }
+
+     // Migrate lp token to another lp contract. Can be called by anyone. We trust that migrator contract is good.
+    function migrate(uint256 _pid) external {
+        require(address(migrator) != address(0), "migrate: no migrator");
+        PoolInfo storage pool = poolInfo[_pid];
+        IERC20 lpToken = pool.lpToken;
+        uint256 bal = lpToken.balanceOf(address(this));
+        lpToken.approve(address(migrator), bal);
+        IERC20 newLpToken = migrator.migrate(lpToken);
+        require(bal == newLpToken.balanceOf(address(this)), "migrate: bad");
+        pool.lpToken = newLpToken;
     }
 }
 
