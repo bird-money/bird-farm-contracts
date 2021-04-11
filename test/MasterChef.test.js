@@ -66,39 +66,73 @@ contract('MasterChef', ([alice, bob, carol, dev, minter]) => {
 
   it('2 people deposit tokens to 2 pools and checkreward, harvest reward, withdraw tokens. add tokens again checkreward, harvest reward, withdraw tokens ', async () => {
     await this.chef.add('2000', this.lp1.address, true, { from: minter });
-    await this.chef.add('8000', this.lp2.address, true, { from: minter });
+    await this.chef.add('2000', this.lp2.address, true, { from: minter });
 
     await this.lp1.approve(this.chef.address, '1000', { from: alice });
-    await this.lp3.approve(this.chef.address, '1000', { from: alice });
+    await this.lp2.approve(this.chef.address, '1000', { from: alice });
     await this.lp1.approve(this.chef.address, '1000', { from: bob });
-    await this.lp3.approve(this.chef.address, '1000', { from: bob });
+    await this.lp2.approve(this.chef.address, '1000', { from: bob });
 
     assert.equal((await this.usdt.balanceOf(alice)).toString(), '0');
     assert.equal((await this.usdt.balanceOf(bob)).toString(), '0');
 
+    
+    console.log(
+      'alice balance usdt before deposit lp tokens: ',
+      (await this.usdt.balanceOf(alice)).toString()
+    );
+    await time.advanceBlock();
+    await time.advanceBlock();
+    await time.advanceBlock();
+
     await this.chef.deposit(0, '10', { from: alice });
     await this.chef.deposit(1, '10', { from: alice });
-    await this.chef.deposit(0, '10', { from: bob });
-    await this.chef.deposit(1, '10', { from: bob });
+    await time.advanceBlock();
+    await time.advanceBlock();
+    await time.advanceBlock();
+
     console.log(
-      'Alice pending reward: ',
-      await this.chef.pendingRewardToken(0, alice)
+      'Alice pending reward pool 0: ',
+      (await this.chef.pendingRewardToken(0, alice)).toString()
+    );console.log(
+      'Alice pending reward pool 1: ',
+      (await this.chef.pendingRewardToken(1, alice)).toString()
     );
     await this.chef.harvestPendingReward(0, { from: alice });
-    // await this.chef.deposit(1, '20', { from: alice });
-    // await this.chef.withdraw(1, '10', { from: alice });
+    await this.chef.harvestPendingReward(1, { from: alice });
+    await this.chef.withdraw(0, '10', { from: alice });
+    await this.chef.withdraw(1, '10', { from: alice });
+
     console.log(
       'alice balance usdt after deposit lp tokens: ',
       (await this.usdt.balanceOf(alice)).toString()
     );
+    assert.equal((await this.usdt.balanceOf(alice)).toString(), '500'); // reward get from both pools after 2 blocks
 
-    // await this.chef.add('100', this.lp1.address, true, { from: minter });
-    // await this.lp1.approve(this.chef.address, '1000', { from: alice });
-    // await this.chef.deposit(10, '20', { from: alice });
 
-    //assert.equal((await this.usdt.balanceOf(alice)).toString(), '778');
 
-    // assert.equal((await this.chef.getPoolPoint(0, { from: minter })).toString(), '1900');
+    console.log(
+      'bob balance usdt before deposit lp tokens: ',
+      (await this.usdt.balanceOf(bob)).toString()
+    );
+    await this.chef.deposit(0, '10', { from: bob });
+    await this.chef.deposit(1, '10', { from: bob });
+   console.log(
+      'Bob pending reward pool 0: ',
+      (await this.chef.pendingRewardToken(0, bob)).toString()
+    );
+
+    console.log(
+      'Bob pending reward pool 0: ',
+      (await this.chef.pendingRewardToken(0, bob)).toString()
+    );
+    await this.chef.harvestPendingReward(0, { from: bob });
+    console.log(
+      'Bob balance usdt after deposit lp tokens: ',
+      (await this.usdt.balanceOf(bob)).toString()
+    );
+    assert.equal((await this.usdt.balanceOf(bob)).toString(), '100'); // reward from 1 pool only
+
   });
 });
 
