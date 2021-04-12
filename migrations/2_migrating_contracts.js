@@ -7,26 +7,30 @@ const kovanDeployScript = async (
   deployer,
   [alice, bob, carol, dev, minter]
 ) => {
-  await deployer.deploy(MockERC20, 'USDT', 'USDT', toWei('100'));
-  const lpAddr = MockERC20.address;
+  // await deployer.deploy(BlueToken, 'LP', 'LP', toWei('1000'));
+  // await deployer.deploy(PinkToken, 'USDT', 'USDT', toWei('1000'));
+  await deployer.deploy(BirdFarm, PinkToken.address);
 
-  await deployer.deploy(MockERC20, 'USDT', 'USDT', toWei('100'));
+  console.log('LP Token address: ', BlueToken.address);
+  console.log('USDT address: ', PinkToken.address);
+  console.log('BirdFarm address: ', BirdFarm.address);
 
-  await deployer.deploy(
-    BirdFarm,
-    MockERC20.address,
-    //dev,
-    '1000', // reward tokens per block
-    '100', //start reward block
-    '1000000000000', //end reward block
-    '150' //end bonus reward block
-  );
-  console.log('LP Token MockERC20.address: ', lpAddr);
-  console.log('USDT MockERC20.address: ', MockERC20.address);
-  console.log('BirdFarm.address: ', BirdFarm.address);
-
-  const usdt = await MockERC20.deployed();
+  const usdt = await PinkToken.deployed();
   await usdt.mint(BirdFarm.address, toWei('100000'));
+
+  const farm = await BirdFarm.deployed();
+  await farm.addPool(
+    '1000', // Allocpoint
+    BlueToken.address, // LP Token
+    true // withUpdate
+  );
+
+  const birdEthLP = '0xF1719564AE1A46bA7A53164191D1dc8De31ECB79';
+  await farm.addPool(
+    '1000', // Allocpoint
+    birdEthLP, // LP Token
+    true // withUpdate
+  );
 };
 
 const mainnetDeployScript = async (
@@ -36,15 +40,7 @@ const mainnetDeployScript = async (
   const usdt = '0xdac17f958d2ee523a2206206994597c13d831ec7';
   console.log('usdt.address: ', usdt);
 
-  await deployer.deploy(
-    BirdFarm,
-    usdt,
-    //dev,
-    '1000', // reward tokens per block
-    '100', //start reward block
-    '10000', //end reward block
-    '150' //end bonus reward block
-  );
+  await deployer.deploy(BirdFarm, usdt);
   console.log('BirdFarm.address: ', BirdFarm.address);
 };
 
@@ -72,4 +68,5 @@ module.exports = async (deployer, network, accounts) => {
 const toWei = w => web3.utils.toWei(w);
 
 const BirdFarm = artifacts.require('BirdFarm');
-const MockERC20 = artifacts.require('MockERC20');
+const PinkToken = artifacts.require('PinkToken');
+const BlueToken = artifacts.require('BlueToken');

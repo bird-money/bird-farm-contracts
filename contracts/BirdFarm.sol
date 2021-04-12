@@ -35,7 +35,7 @@ contract BirdFarm is Ownable {
     uint256 public endRewardBlock = MAX_UINT; // MAX UINT
 
     /// @dev REWARD_TOKEN tokens created per block.
-    uint256 public rewardTokenPerBlock = 100;
+    uint256 public rewardTokenPerBlock = 100 ether;
 
     /// @dev The REWARD_TOKEN TOKEN!
     IERC20 public rewardToken;
@@ -328,10 +328,14 @@ contract BirdFarm is Ownable {
                 user.rewardDebt
             );
         savePendingReward(msg.sender, _pid, pending);
+        user.rewardDebt = user.amount.mul(pool.accRewardTokenPerShare).div(
+            1e12
+        );
+
         uint256 reward = getReward(_pid);
         require(reward > 0, "You have no pending reward.");
         require(
-            rewardToken.balanceOf(address(this)) > rewardFrozenTime,
+            rewardToken.balanceOf(address(this)) > reward,
             "This contract has not enough balance"
         );
 
