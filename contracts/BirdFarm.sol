@@ -260,7 +260,7 @@ contract BirdFarm is Ownable {
             user.amount.mul(pool.accRewardTokenPerShare).div(1e12).sub(
                 user.rewardDebt
             );
-        savePendingReward(msg.sender, _pid, pending);
+        addToPendingReward(msg.sender, _pid, pending);
         if (user.amount == 0) user.unstakeTime = now + unstakeFrozenTime;
 
         user.amount = user.amount.add(_amount);
@@ -297,7 +297,7 @@ contract BirdFarm is Ownable {
             user.amount.mul(pool.accRewardTokenPerShare).div(1e12).sub(
                 user.rewardDebt
             );
-        savePendingReward(msg.sender, _pid, pending);
+        addToPendingReward(msg.sender, _pid, pending);
         user.amount = user.amount.sub(_amount);
         user.rewardDebt = user.amount.mul(pool.accRewardTokenPerShare).div(
             1e12
@@ -314,12 +314,14 @@ contract BirdFarm is Ownable {
     /// @param _pid pool id
 
     function harvestPendingReward(uint256 _pid) external {
-        PoolInfo storage pool = poolInfo[_pid];
-        UserInfo storage user = userInfo[_pid][msg.sender];
         require(
             now >= rewardFrozenTime,
             "Can not collect reward at this time."
         );
+        
+        PoolInfo storage pool = poolInfo[_pid];
+        UserInfo storage user = userInfo[_pid][msg.sender];
+        
 
         updatePool(_pid);
         uint256 pending =
@@ -327,7 +329,7 @@ contract BirdFarm is Ownable {
                 user.rewardDebt
             );
 
-        savePendingReward(msg.sender, _pid, pending);
+        addToPendingReward(msg.sender, _pid, pending);
 
         uint256 reward = getReward(_pid);
         require(reward > 0, "You have no pending reward.");
@@ -371,7 +373,7 @@ contract BirdFarm is Ownable {
     /// @param _user the user
     /// @param _pid pool id
     /// @param _amount amount of reward tokens
-    function savePendingReward(
+    function addToPendingReward(
         address _user,
         uint256 _pid,
         uint256 _amount
@@ -402,11 +404,16 @@ contract BirdFarm is Ownable {
     /// @dev owner can add reward token to contract so that it can be distributed to users
     /// @param _amount amount of reward tokens
     function addRewardTokensToContract(uint256 _amount) external onlyOwner {
+        uint256 totalBalance = balanceOf(address(this)).add(_amount);
+        uint256 blocksInWhichRewardWillEnd =
+            totalBalance.div(rewardTokenPerBlock);
+        endRewardBlock = block.number + blocksInWhichRewardWillEnd;
+
         require(
             rewardToken.transferFrom(msg.sender, address(this), _amount),
             "Error in adding reward tokens in contract."
         );
-        emit AddedRewardTokensToContract(_amount);
+        emit EndRewardBlockChanged(endRewardBlock);
     }
 
     event AddedRewardTokensToContract(uint256 amount);

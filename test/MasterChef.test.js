@@ -35,13 +35,13 @@ contract('BirdFarm', ([alice, bob, carol, dev, minter]) => {
       (await this.chef.endRewardBlock()).toString()
     );
 
-    await this.chef.addRewardTokensToContract(toWei('100000'), {
+    await this.chef.addRewardTokensToContract(toWei('500'), {
       from: minter,
     });
 
-    await this.chef.setEndRewardBlockFromNow(10, {
-      from: minter,
-    });
+    // await this.chef.setEndRewardBlockFromNow(10, {
+    //   from: minter,
+    // });
     console.log(
       'End Reward Block: ',
       (await this.chef.endRewardBlock()).toString()
@@ -55,14 +55,47 @@ contract('BirdFarm', ([alice, bob, carol, dev, minter]) => {
     await seeBalances(alice);
 
     await this.chef.deposit(0, toWei('10'), { from: alice });
+    await this.chef.deposit(0, toWei('10'), { from: alice });
+    
     await time.advanceBlock();
     await seeBalances(alice);
 
-    await this.chef.withdraw(0, toWei('10'), { from: alice });
+    await time.advanceBlock();
     await seeBalances(alice);
 
-    await this.chef.harvestPendingReward(0, { from: alice });
+    await time.advanceBlock();
     await seeBalances(alice);
+
+    await time.advanceBlock();
+    await seeBalances(alice);
+
+    await time.advanceBlock();
+    await seeBalances(alice);
+
+    await time.advanceBlock();
+    await seeBalances(alice);
+
+    await time.advanceBlock();
+    await seeBalances(alice);
+
+    await time.advanceBlock();
+    await seeBalances(alice);
+
+    await time.advanceBlock();
+    await seeBalances(alice);
+
+    await time.advanceBlock();
+    await seeBalances(alice);
+
+    await time.advanceBlock();
+    await seeBalances(alice);
+
+
+    // await this.chef.withdraw(0, toWei('10'), { from: alice });
+    // await seeBalances(alice);
+
+     await this.chef.harvestPendingReward(0, { from: alice });
+     await seeBalances(alice);
     
   });
 });
