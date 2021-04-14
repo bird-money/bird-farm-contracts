@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "migrate": "truffle migrate --network kovan --reset",
-    "verify": "truffle run verify Migrations BirdFarm BlueToken PinkToken --network kovan",
+    "verify": "truffle run verify BirdFarm --network kovan",
     "deploy": "yarn migrate && yarn verify",
     "migrateMainnet": "truffle migrate --network mainnet --reset",
     "verifyMainnet": "truffle run verify Migrations EDIPI --network mainnet",

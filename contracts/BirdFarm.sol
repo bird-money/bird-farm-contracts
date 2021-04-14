@@ -49,9 +49,7 @@ contract BirdFarm is Ownable {
     /// @dev Info of each user that staked tokens.
     mapping(uint256 => mapping(address => UserInfo)) public userInfo;
 
-    /// @notice save pending rewards with respect to each pool id
-    /// @dev exmaple: user_address  =>  ( pool_id => UsersPendingReward)
-    mapping(address => mapping(uint256 => uint256)) public pendingRewardOf;
+    mapping(address => mapping(uint256 => uint256)) private pendingRewardOf;
 
     /// @dev Total allocation poitns. Must be the sum of all allocation points in all pools.
     uint256 public totalAllocPoint = 0;
@@ -191,16 +189,17 @@ contract BirdFarm is Ownable {
 
         uint256 multiplier = getMultiplier(pool.lastRewardBlock, block.number);
         uint256 rewardTokenReward =
-            multiplier
-                .mul(rewardTokenPerBlock)
-                .mul(pool.allocPoint)
-                .mul(1e12)
-                .div(totalAllocPoint);
-        accRewardTokenPerShare = accRewardTokenPerShare.add(
-            rewardTokenReward.div(poolSupply)
-        );
+            multiplier.mul(rewardTokenPerBlock).mul(pool.allocPoint).div(
+                totalAllocPoint
+            );
+
+        if (poolSupply != 0)
+            accRewardTokenPerShare = accRewardTokenPerShare.add(
+                rewardTokenReward.mul(1e12).div(poolSupply)
+            );
 
         return
+            getReward(_pid) +
             user.amount.mul(accRewardTokenPerShare).div(1e12).sub(
                 user.rewardDebt
             );
@@ -232,13 +231,11 @@ contract BirdFarm is Ownable {
         }
         uint256 multiplier = getMultiplier(pool.lastRewardBlock, block.number);
         uint256 rewardTokenReward =
-            multiplier
-                .mul(rewardTokenPerBlock)
-                .mul(pool.allocPoint)
-                .mul(1e12)
-                .div(totalAllocPoint);
+            multiplier.mul(rewardTokenPerBlock).mul(pool.allocPoint).div(
+                totalAllocPoint
+            );
         pool.accRewardTokenPerShare = pool.accRewardTokenPerShare.add(
-            rewardTokenReward.div(poolSupply)
+            rewardTokenReward.mul(1e12).div(poolSupply)
         );
         pool.lastRewardBlock = block.number;
     }
@@ -249,6 +246,7 @@ contract BirdFarm is Ownable {
     /// @param _amount how many tokens you want to stake
     function deposit(uint256 _pid, uint256 _amount) external {
         require(_amount > 0, "Must deposit amount more than ZERO");
+
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][msg.sender];
         require(
@@ -264,6 +262,7 @@ contract BirdFarm is Ownable {
             );
         savePendingReward(msg.sender, _pid, pending);
         if (user.amount == 0) user.unstakeTime = now + unstakeFrozenTime;
+
         user.amount = user.amount.add(_amount);
         user.rewardDebt = user.amount.mul(pool.accRewardTokenPerShare).div(
             1e12
@@ -327,20 +326,23 @@ contract BirdFarm is Ownable {
             user.amount.mul(pool.accRewardTokenPerShare).div(1e12).sub(
                 user.rewardDebt
             );
+
         savePendingReward(msg.sender, _pid, pending);
+
+        uint256 reward = getReward(_pid);
+        require(reward > 0, "You have no pending reward.");
+
         user.rewardDebt = user.amount.mul(pool.accRewardTokenPerShare).div(
             1e12
         );
 
-        uint256 reward = getReward(_pid);
-        require(reward > 0, "You have no pending reward.");
         require(
             rewardToken.balanceOf(address(this)) > reward,
             "This contract has not enough balance"
         );
 
         // User has collected the reward so pending reward is ZERO
-        savePendingReward(msg.sender, _pid, 0);
+        clearPendingReward(msg.sender, _pid);
 
         require(
             rewardToken.transfer(msg.sender, reward),
@@ -375,6 +377,10 @@ contract BirdFarm is Ownable {
         uint256 _amount
     ) internal {
         pendingRewardOf[_user][_pid] = pendingRewardOf[_user][_pid] + _amount;
+    }
+
+    function clearPendingReward(address _user, uint256 _pid) internal {
+        pendingRewardOf[_user][_pid] = 0;
     }
 
     /// @notice gets previous rewards of a user
@@ -539,6 +545,17 @@ contract BirdFarm is Ownable {
     }
 
     event EndRewardBlockChanged(uint256 endRewardBlock);
+
+    /// @notice util function to get reward token balance of this contract
+    function balanceOf() external view returns (uint256) {
+        return balanceOf(msg.sender);
+    }
+
+    /// @notice util function to get reward token balance of this contract
+    /// @param _user how much reward tokens this user has
+    function balanceOf(address _user) public view returns (uint256) {
+        return rewardToken.balanceOf(_user);
+    }
 
     // migrator
     IMigratorChef public migrator;
