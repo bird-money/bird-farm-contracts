@@ -35,7 +35,7 @@ contract('BirdFarm', ([alice, bob, carol, dev, minter]) => {
       (await this.chef.endRewardBlock()).toString()
     );
 
-    await this.chef.addRewardTokensToContract(toWei('500'), {
+    await this.chef.addRewardTokensToContract(toWei('600'), {
       from: minter,
     });
 
@@ -50,13 +50,15 @@ contract('BirdFarm', ([alice, bob, carol, dev, minter]) => {
     await this.lp1.approve(this.chef.address, MAX_UINT256, { from: alice });
 
     assert.equal((await this.usdt.balanceOf(alice)).toString(), '0');
-    
 
     await seeBalances(alice);
 
     await this.chef.deposit(0, toWei('10'), { from: alice });
     await this.chef.deposit(0, toWei('10'), { from: alice });
-    
+
+    await time.advanceBlock();
+    await seeBalances(alice); 
+
     await time.advanceBlock();
     await seeBalances(alice);
 
@@ -87,16 +89,16 @@ contract('BirdFarm', ([alice, bob, carol, dev, minter]) => {
     await time.advanceBlock();
     await seeBalances(alice);
 
-    await time.advanceBlock();
+    await this.chef.harvestReward(0, { from: alice });
+
+    await this.chef.deposit(0, toWei('10'), { from: alice });
     await seeBalances(alice);
 
+    await this.chef.deposit(0, toWei('10'), { from: alice });
+    await seeBalances(alice);
 
-    // await this.chef.withdraw(0, toWei('10'), { from: alice });
-    // await seeBalances(alice);
-
-     await this.chef.harvestPendingReward(0, { from: alice });
-     await seeBalances(alice);
-    
+    await this.chef.deposit(0, toWei('10'), { from: alice });
+    await seeBalances(alice);
   });
 });
 
@@ -112,6 +114,7 @@ const seeBalances = async acc => {
   );
   console.log(
     'alice usdt: ',
-    fromWei(await this.usdt.balanceOf(acc)).toString(), "\n"
+    fromWei(await this.usdt.balanceOf(acc)).toString(),
+    '\n'
   );
-}
+};

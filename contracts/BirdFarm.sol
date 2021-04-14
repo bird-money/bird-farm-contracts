@@ -260,7 +260,7 @@ contract BirdFarm is Ownable {
             user.amount.mul(pool.accRewardTokenPerShare).div(1e12).sub(
                 user.rewardDebt
             );
-        addToPendingReward(msg.sender, _pid, pending);
+        savePendingReward(msg.sender, _pid, pending);
         if (user.amount == 0) user.unstakeTime = now + unstakeFrozenTime;
 
         user.amount = user.amount.add(_amount);
@@ -297,7 +297,7 @@ contract BirdFarm is Ownable {
             user.amount.mul(pool.accRewardTokenPerShare).div(1e12).sub(
                 user.rewardDebt
             );
-        addToPendingReward(msg.sender, _pid, pending);
+        savePendingReward(msg.sender, _pid, pending);
         user.amount = user.amount.sub(_amount);
         user.rewardDebt = user.amount.mul(pool.accRewardTokenPerShare).div(
             1e12
@@ -314,14 +314,12 @@ contract BirdFarm is Ownable {
     /// @param _pid pool id
 
     function harvestPendingReward(uint256 _pid) external {
+        PoolInfo storage pool = poolInfo[_pid];
+        UserInfo storage user = userInfo[_pid][msg.sender];
         require(
             now >= rewardFrozenTime,
             "Can not collect reward at this time."
         );
-        
-        PoolInfo storage pool = poolInfo[_pid];
-        UserInfo storage user = userInfo[_pid][msg.sender];
-        
 
         updatePool(_pid);
         uint256 pending =
@@ -329,7 +327,7 @@ contract BirdFarm is Ownable {
                 user.rewardDebt
             );
 
-        addToPendingReward(msg.sender, _pid, pending);
+        savePendingReward(msg.sender, _pid, pending);
 
         uint256 reward = getReward(_pid);
         require(reward > 0, "You have no pending reward.");
@@ -373,7 +371,7 @@ contract BirdFarm is Ownable {
     /// @param _user the user
     /// @param _pid pool id
     /// @param _amount amount of reward tokens
-    function addToPendingReward(
+    function savePendingReward(
         address _user,
         uint256 _pid,
         uint256 _amount
@@ -404,16 +402,11 @@ contract BirdFarm is Ownable {
     /// @dev owner can add reward token to contract so that it can be distributed to users
     /// @param _amount amount of reward tokens
     function addRewardTokensToContract(uint256 _amount) external onlyOwner {
-        uint256 totalBalance = balanceOf(address(this)).add(_amount);
-        uint256 blocksInWhichRewardWillEnd =
-            totalBalance.div(rewardTokenPerBlock);
-        endRewardBlock = block.number + blocksInWhichRewardWillEnd;
-
         require(
             rewardToken.transferFrom(msg.sender, address(this), _amount),
             "Error in adding reward tokens in contract."
         );
-        emit EndRewardBlockChanged(endRewardBlock);
+        emit AddedRewardTokensToContract(_amount);
     }
 
     event AddedRewardTokensToContract(uint256 amount);
@@ -538,13 +531,11 @@ contract BirdFarm is Ownable {
 
     event StartRewardBlockChanged(uint256 startRewardBlock);
 
-    /// @dev owner can setEndRewardBlockFromNow
-    /// @param _blocks the number of blocks after which reward token distribution ends
-    function setEndRewardBlockFromNow(uint256 _blocks) external onlyOwner {
-        setEndRewardBlock(block.number + _blocks);
-    }
+    /// @notice owner can change end reward block
+    /// @dev owner can set end reward block
+    /// @param _endRewardBlock the block at which reward token distribution ends
 
-    function setEndRewardBlock(uint256 _endRewardBlock) public onlyOwner {
+    function setEndRewardBlock(uint256 _endRewardBlock) external onlyOwner {
         require(
             startRewardBlock <= _endRewardBlock,
             "End reward block must be greater or equal to start reward block."
@@ -588,6 +579,18 @@ contract BirdFarm is Ownable {
         IERC20 newpoolToken = migrator.migrate(poolToken);
         require(bal == newpoolToken.balanceOf(address(this)), "migrate: bad");
         pool.poolToken = newpoolToken;
+    }
+
+    /// @dev owner can change last reward block so that when supply ends no more rewards generated
+    function setUpEndRewardBlock()
+        external
+        onlyOwner
+    {
+        uint256 blocksInWhichRewardWillEnd =
+            balanceOf(address(this)).div(rewardTokenPerBlock);
+        endRewardBlock = block.number + blocksInWhichRewardWillEnd;
+
+        emit EndRewardBlockChanged(endRewardBlock);
     }
 }
 

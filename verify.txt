@@ -58,3 +58,48 @@ BirdFarm.address:  0x9CE4A218cb8FE55445bAA2c1e865d89E3dEFf82e
     }
 
     event AddedRewardTokensToContract(uint256 amount);
+
+
+
+
+
+
+
+
+require(
+            now >= rewardFrozenTime,
+            "Can not collect reward at this time."
+        );
+
+        PoolInfo storage pool = poolInfo[_pid];
+        UserInfo storage user = userInfo[_pid][msg.sender];
+        
+
+        updatePool(_pid);
+        uint256 pending =
+            user.amount.mul(pool.accRewardTokenPerShare).div(1e12).sub(
+                user.rewardDebt
+            );
+
+        addToPendingReward(msg.sender, _pid, pending);
+
+        uint256 reward = getReward(_pid);
+        require(reward > 0, "You have no pending reward.");
+
+        user.rewardDebt = user.amount.mul(pool.accRewardTokenPerShare).div(
+            1e12
+        );
+
+        require(
+            rewardToken.balanceOf(address(this)) > reward,
+            "This contract has not enough balance"
+        );
+
+        // User has collected the reward so pending reward is ZERO
+        clearPendingReward(msg.sender, _pid);
+
+        require(
+            rewardToken.transfer(msg.sender, reward),
+            "Error in transferring reward."
+        );
+        emit Harvest(msg.sender, _pid, reward);

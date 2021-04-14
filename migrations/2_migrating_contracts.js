@@ -9,19 +9,21 @@ const kovanDeployScript = async (
 ) => {
   // await deployer.deploy(BlueToken, 'LP', 'LP', toWei('1000'));
   // await deployer.deploy(PinkToken, 'USDT', 'USDT', toWei('1000'));
-  await deployer.deploy(BirdFarm, PinkToken.address);
+  const usdtAddr = '0xD86054bE96C0443209E06564784866c9A8fCb84f';
+  const lpAddr = '0xD86054bE96C0443209E06564784866c9A8fCb84f';
+  await deployer.deploy(BirdFarm, usdtAddr);
 
-  console.log('LP Token address: ', BlueToken.address);
-  console.log('USDT address: ', PinkToken.address);
+  console.log('LP Token address: ', lpAddr);
+  console.log('USDT address: ', usdtAddr);
   console.log('BirdFarm address: ', BirdFarm.address);
 
-  const usdt = await PinkToken.deployed();
+  const usdt = await PinkToken.at(usdtAddr);
   await usdt.mint(BirdFarm.address, toWei('100000'));
 
   const farm = await BirdFarm.deployed();
   await farm.addPool(
     '1000', // Allocpoint
-    BlueToken.address, // LP Token
+    lpAddr, // LP Token
     true // withUpdate
   );
 
@@ -31,6 +33,8 @@ const kovanDeployScript = async (
     birdEthLP, // LP Token
     true // withUpdate
   );
+
+  await farm.setUpEndRewardBlock();
 };
 
 const mainnetDeployScript = async (
