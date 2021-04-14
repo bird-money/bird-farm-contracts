@@ -531,11 +531,13 @@ contract BirdFarm is Ownable {
 
     event StartRewardBlockChanged(uint256 startRewardBlock);
 
-    /// @notice owner can change end reward block
-    /// @dev owner can set end reward block
-    /// @param _endRewardBlock the block at which reward token distribution ends
+    /// @dev owner can setEndRewardBlockFromNow
+    /// @param _blocks the number of blocks after which reward token distribution ends
+    function setEndRewardBlockFromNow(uint256 _blocks) external onlyOwner {
+        setEndRewardBlock(block.number + _blocks);
+    }
 
-    function setEndRewardBlock(uint256 _endRewardBlock) external onlyOwner {
+    function setEndRewardBlock(uint256 _endRewardBlock) public onlyOwner {
         require(
             startRewardBlock <= _endRewardBlock,
             "End reward block must be greater or equal to start reward block."

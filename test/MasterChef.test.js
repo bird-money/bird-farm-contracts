@@ -1,11 +1,20 @@
 const { expectRevert, time } = require('@openzeppelin/test-helpers');
 const { MAX_UINT256 } = require('@openzeppelin/test-helpers/src/constants');
 const BirdFarm = artifacts.require('BirdFarm');
-const MockBEP20 = artifacts.require('MockERC20');
+const PinkToken = artifacts.require('PinkToken');
+const BlueToken = artifacts.require('BlueToken');
 
 contract('BirdFarm', ([alice, bob, carol, dev, minter]) => {
-  beforeEach(async () => {
-    this.usdt = await MockBEP20.new('USDT', 'USDT', toWei('100000000'), {
+  it('real case', async () => {
+    this.usdt = await PinkToken.new('USDT', 'USDT', bigWei(), {
+      from: minter,
+    });
+
+    this.lp1 = await BlueToken.new('LPToken', 'LP1', toWei('1000000'), {
+      from: minter,
+    });
+
+    this.lp2 = await BlueToken.new('LPToken', 'LP2', toWei('1000000'), {
       from: minter,
     });
 
@@ -13,84 +22,48 @@ contract('BirdFarm', ([alice, bob, carol, dev, minter]) => {
       from: minter,
     });
 
-    await this.usdt.mint(this.chef.address, toWei('1000000'), {
-      from: minter,
-    });
+    await this.lp1.transfer(bob, toWei('100'), { from: minter });
+    await this.lp1.transfer(alice, toWei('100'), { from: minter });
 
-    this.lp1 = await MockBEP20.new('LPToken', 'LP1', toWei('1000000'), {
-      from: minter,
-    });
-
-    this.lp2 = await MockBEP20.new('LPToken', 'LP2', toWei('1000000'), {
-      from: minter,
-    });
-
-    await this.lp1.transfer(bob, toWei('2000'), { from: minter });
-    await this.lp2.transfer(bob, toWei('2000'), { from: minter });
-
-    await this.lp1.transfer(alice, toWei('2000'), { from: minter });
-    await this.lp2.transfer(alice, toWei('2000'), { from: minter });
-  });
-
-  it('real case', async () => {
     await this.chef.addPool('2000', this.lp1.address, true, {
       from: minter,
     });
 
-    await this.chef.addPool('2000', this.lp2.address, true, {
+    await this.usdt.approve(this.chef.address, MAX_UINT256, { from: minter });
+    console.log(
+      'End Reward Block: ',
+      (await this.chef.endRewardBlock()).toString()
+    );
+
+    await this.chef.addRewardTokensToContract(toWei('100000'), {
       from: minter,
     });
 
+    await this.chef.setEndRewardBlockFromNow(10, {
+      from: minter,
+    });
+    console.log(
+      'End Reward Block: ',
+      (await this.chef.endRewardBlock()).toString()
+    );
+
     await this.lp1.approve(this.chef.address, MAX_UINT256, { from: alice });
-    // await this.lp2.approve(this.chef.address, MAX_UINT256, { from: alice });
 
     assert.equal((await this.usdt.balanceOf(alice)).toString(), '0');
-    console.log(
-      'alice balance usdt before deposit lp tokens: ',
-      (await this.usdt.balanceOf(alice)).toString()
-    );
+    
+
+    await seeBalances(alice);
 
     await this.chef.deposit(0, toWei('10'), { from: alice });
     await time.advanceBlock();
-    await time.advanceBlock();
+    await seeBalances(alice);
+
     await this.chef.withdraw(0, toWei('10'), { from: alice });
+    await seeBalances(alice);
 
-    // await this.chef.harvestPendingReward(0, { from: alice });
-
-    console.log(
-      '\npending reward token: ',
-      fromWei(await this.chef.pendingRewardToken(0, alice)).toString()
-    );
-    console.log(
-      'alice balance: ',
-      fromWei(await this.usdt.balanceOf(alice)).toString()
-    );
-
-    await time.advanceBlock();
-    await time.advanceBlock();
     await this.chef.harvestPendingReward(0, { from: alice });
-
-    console.log(
-      '\npending reward token: ',
-      fromWei(await this.chef.pendingRewardToken(0, alice)).toString()
-    );
-    console.log(
-      'alice balance: ',
-      fromWei(await this.usdt.balanceOf(alice)).toString()
-    );
-
-    await time.advanceBlock();
-    await time.advanceBlock();
-    // await this.chef.harvestPendingReward(0, { from: alice });
-
-    console.log(
-      '\npending reward token: ',
-      fromWei(await this.chef.pendingRewardToken(0, alice)).toString()
-    );
-    console.log(
-      'alice balance: ',
-      fromWei(await this.usdt.balanceOf(alice)).toString()
-    );
+    await seeBalances(alice);
+    
   });
 });
 
@@ -98,3 +71,14 @@ contract('BirdFarm', ([alice, bob, carol, dev, minter]) => {
 
 const toWei = w => web3.utils.toWei(w);
 const fromWei = w => web3.utils.fromWei(w);
+const bigWei = w => toWei(toWei('1'));
+const seeBalances = async acc => {
+  console.log(
+    '\nalice pending reward: ',
+    fromWei(await this.chef.pendingRewardToken(0, acc)).toString()
+  );
+  console.log(
+    'alice usdt: ',
+    fromWei(await this.usdt.balanceOf(acc)).toString(), "\n"
+  );
+}

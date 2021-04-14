@@ -1,3 +1,60 @@
 LP Token MockERC20.address:  0x9768d3A9E3a9fAae7406F6E956A81143ABA8758A
 USDT MockERC20.address:  0xD86054bE96C0443209E06564784866c9A8fCb84f
 BirdFarm.address:  0x9CE4A218cb8FE55445bAA2c1e865d89E3dEFf82e
+
+
+
+
+/// @notice util function to get reward token balance of this contract
+    function balanceOfThis() public view returns (uint256) {
+        return balanceOf(address(this));
+    }
+
+    /// @notice util function to get reward token balance of caller
+    function balanceOf() public view returns (uint256) {
+        return balanceOf(msg.sender);
+    }
+
+    /// @notice util function to get reward token balance of this contract
+    /// @param _user how much reward tokens this user has
+    function balanceOf(address _user) public view returns (uint256) {
+        return rewardToken.balanceOf(_user);
+    }
+
+
+
+
+
+
+
+
+
+ /// @dev owner can change last reward block so that when supply ends no more rewards generated
+    function setUpEndRewardBlockAccordingToTotalRewardSupply()
+        external
+        onlyOwner
+    {
+        uint256 blocksInWhichRewardWillEnd =
+            balanceOfThis().div(rewardTokenPerBlock);
+        endRewardBlock = block.number + blocksInWhichRewardWillEnd;
+
+        emit EndRewardBlockChanged(endRewardBlock);
+    }
+
+    /// @notice owner puts reward tokens in contract
+    /// @dev owner can add reward token to contract so that it can be distributed to users
+    /// @param _amount amount of reward tokens
+    function addRewardTokensToContract(uint256 _amount) external onlyOwner {
+        uint256 totalBalance = balanceOfThis().add(_amount);
+        uint256 blocksInWhichRewardWillEnd =
+            totalBalance.div(rewardTokenPerBlock);
+        endRewardBlock = block.number + blocksInWhichRewardWillEnd;
+
+        require(
+            rewardToken.transferFrom(msg.sender, address(this), _amount),
+            "Error in adding reward tokens in contract."
+        );
+        emit EndRewardBlockChanged(endRewardBlock);
+    }
+
+    event AddedRewardTokensToContract(uint256 amount);
