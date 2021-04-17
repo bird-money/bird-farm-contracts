@@ -86,6 +86,9 @@ contract('BirdFarm', ([alice, bob, carol, dev, minter]) => {
     console.log('After >> Harvest >>');
     await seeBalances(alice);
 
+    console.log('Bob pendingReward');
+    await seeBalances(bob);
+    
     //   // 0.01 eth 1 eth rew per block
   });
 });
@@ -121,6 +124,8 @@ const seeBalances = async acc => {
     ' Alice Pending Reward Tokens'
   );
   console.log('');
+
+  
 };
 
 const run10x = async func => {
