@@ -21,7 +21,8 @@ contract('BirdFarm', ([alice, bob, carol, dev, minter]) => {
 
     //BEFORE: await this.usdt.transfer(this.chef.address, '8000000000000000000', { from: minter });
     //NOW:
-    const rewardSupply = toWei('30000');
+    // const rewardSupply = toWei('30000');
+    const rewardSupply = toWei('0.2');
     await this.usdt.approve(this.chef.address, MAX_UINT256, { from: minter });
     await this.chef.addRewardTokensToContract(rewardSupply, { from: minter });
 
@@ -34,7 +35,7 @@ contract('BirdFarm', ([alice, bob, carol, dev, minter]) => {
     );
     await seeBalances(alice);
 
-    await this.chef.deposit('0', '20', { from: alice });
+    await this.chef.deposit('0', toWei('30'), { from: alice });
     console.log('After deposit');
     await seeBalances(alice);
 
@@ -42,8 +43,8 @@ contract('BirdFarm', ([alice, bob, carol, dev, minter]) => {
     console.log('After 1x block');
     await seeBalances(alice);
 
-    await this.chef.withdraw(0, '20', { from: alice });
-    console.log('After withdraw');
+    console.log('After adding 0.2 tokens');
+    await this.chef.addRewardTokensToContract(toWei('2'), { from: minter });
     await seeBalances(alice);
 
     await run10x(time.advanceBlock);
@@ -56,6 +57,14 @@ contract('BirdFarm', ([alice, bob, carol, dev, minter]) => {
 
     await run10x(time.advanceBlock);
     console.log('After 10x blocks');
+    await seeBalances(alice);
+
+    await this.chef.withdraw(0, toWei('30'), { from: alice });
+    console.log('I Did withdraw');
+    await seeBalances(alice);
+
+    await this.chef.harvest(0, { from: alice });
+    console.log('After >> Harvest >>');
     await seeBalances(alice);
 
     //   // 0.01 eth 1 eth rew per block

@@ -329,6 +329,13 @@ contract BirdFarm is Ownable {
         emit EndRewardBlockChanged(_blockNumber);
     }
 
+    /// @notice owner may use this function to setup end reward block. We want that when reward ends in the contract then the reward should not generate further.
+    /// @dev owner may use this function if he sent directly reward tokens to this contract.
+    function setUpRewardPerDay(uint256 _blockNumber) external onlyOwner {
+        endBlock = _blockNumber;
+        emit EndRewardBlockChanged(_blockNumber);
+    }
+
     event EndRewardBlockChanged(uint256 endRewardBlock);
 
     /// @notice owner puts reward tokens in contract
@@ -360,3 +367,8 @@ contract BirdFarm is Ownable {
 //deposit money 3 times to learn what is reward debt
 
 // add function, block per sec, reward per day
+
+// some experimaents for gas fee later
+// read from state 10 times or make local copy and read from there
+// set many 3 values in a function vs saparate 3 transaction. gas fee savings?
+// emit ImpValueChanged(newValue, string reason) ??? does string increase cost? how much? is this way better?
