@@ -7,7 +7,6 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-
 // BirdFarm is the master of RewardToken. He can make RewardToken and he is a fair guy.
 //
 // Note that it's ownable and the owner wields tremendous power. The ownership
@@ -57,24 +56,28 @@ contract BirdFarm is Ownable {
 
     /// @dev REWARD_TOKEN tokens created per block.
     uint256 public rewardTokenPerBlock = 0.01 ether;
-    
+
     /// @dev Bonus muliplier for early rewardToken makers.
-    uint256 public constant BONUS_MULTIPLIER = 10;
+    uint256 private constant BONUS_MULTIPLIER = 10;
 
     /// @dev Info of each pool.
     PoolInfo[] public poolInfo;
 
     /// @dev Info of each user that stakes LP tokens.
     mapping(uint256 => mapping(address => UserInfo)) public userInfo;
-    
+
     /// @dev Total allocation poitns. Must be the sum of all allocation points in all pools.
     uint256 public totalAllocPoint = 0;
-    
+
     /// @dev The block number when REWARD_TOKEN mining starts.
     uint256 public startBlock = 0;
 
     /// @dev The block number when REWARD_TOKEN mining ends.
-    uint256 public endBlock = type(uint256).max;
+    uint256 public endBlock = 0;
+
+    uint256 usersCanUnstakeAtTime = 0 seconds;
+
+    uint256 usersCanHarvestAtTime = 0 seconds;
 
     /// @dev when some one deposits pool tokens to contract
     event Deposit(address indexed user, uint256 indexed pid, uint256 amount);
@@ -84,7 +87,7 @@ contract BirdFarm is Ownable {
 
     /// @dev when some one harvests reward tokens from contract
     event Harvest(address indexed user, uint256 indexed pid, uint256 amount);
-    
+
     /// @dev when some one do EMERGENCY withdraw of pool tokens from contract
     event EmergencyWithdraw(
         address indexed user,
@@ -92,9 +95,7 @@ contract BirdFarm is Ownable {
         uint256 amount
     );
 
-    constructor(
-        IERC20 _rewardToken
-    ) public {
+    constructor(IERC20 _rewardToken) public {
         rewardToken = _rewardToken;
     }
 
@@ -108,7 +109,7 @@ contract BirdFarm is Ownable {
         uint256 _allocPoint,
         IERC20 _lpToken,
         bool _withUpdate
-    ) public onlyOwner {
+    ) external onlyOwner {
         if (_withUpdate) {
             massUpdatePools();
         }
@@ -130,7 +131,7 @@ contract BirdFarm is Ownable {
         uint256 _pid,
         uint256 _allocPoint,
         bool _withUpdate
-    ) public onlyOwner {
+    ) external onlyOwner {
         if (_withUpdate) {
             massUpdatePools();
         }
@@ -140,9 +141,9 @@ contract BirdFarm is Ownable {
         poolInfo[_pid].allocPoint = _allocPoint;
     }
 
-    // Return reward multiplier over the given _from to _to block.
+    // Return number of blocks between _from to _to block which are applicable for reward tokens. if multiplier returns 10 blocks then 10 * reward per block = 50 coins to be given as reward. equally to community. with repect to pool weight.
     function getMultiplier(uint256 _from, uint256 _to)
-        public
+        internal
         view
         returns (uint256)
     {
@@ -191,7 +192,7 @@ contract BirdFarm is Ownable {
     }
 
     // Update reward vairables for all pools. Be careful of gas spending!
-    function massUpdatePools() public {
+    function massUpdatePools() internal {
         uint256 length = poolInfo.length;
         for (uint256 pid = 0; pid < length; ++pid) {
             updatePool(pid);
@@ -201,8 +202,8 @@ contract BirdFarm is Ownable {
     uint256 private allPoolTokens = 0;
 
     // Update reward variables of the given pool to be up-to-date.
-    function updatePool(uint256 _pid) public {
-        if(allPoolTokens == 0) configTheEndRewardBlock(); // to stop making reward when reward tokens are empty in BirdFarm
+    function updatePool(uint256 _pid) internal {
+        if (allPoolTokens == 0) configTheEndRewardBlock(); // to stop making reward when reward tokens are empty in BirdFarm
 
         PoolInfo storage pool = poolInfo[_pid];
 
@@ -226,10 +227,8 @@ contract BirdFarm is Ownable {
         pool.lastRewardBlock = block.number;
     }
 
-    bool private firstTime = true;
-
     // Deposit LP tokens to MasterChef for REWARD_TOKEN allocation.
-    function deposit(uint256 _pid, uint256 _amount) public {
+    function deposit(uint256 _pid, uint256 _amount) external {
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][msg.sender];
         updatePool(_pid);
@@ -241,13 +240,12 @@ contract BirdFarm is Ownable {
             safeRewardTokenTransfer(msg.sender, pending);
         }
 
-
         pool.lpToken.safeTransferFrom(
             address(msg.sender),
             address(this),
             _amount
         );
-        allPoolTokens += _amount; 
+        allPoolTokens += _amount;
         user.amount = user.amount.add(_amount);
         user.rewardDebt = user.amount.mul(pool.accRewardTokenPerShare).div(
             1e12
@@ -256,7 +254,7 @@ contract BirdFarm is Ownable {
     }
 
     // Withdraw LP tokens from MasterChef.
-    function withdraw(uint256 _pid, uint256 _amount) public {
+    function withdraw(uint256 _pid, uint256 _amount) external {
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][msg.sender];
         require(user.amount >= _amount, "withdraw: not good");
@@ -266,8 +264,8 @@ contract BirdFarm is Ownable {
                 user.rewardDebt
             );
         safeRewardTokenTransfer(msg.sender, pending);
-        
-        allPoolTokens -= _amount; 
+
+        allPoolTokens -= _amount;
         user.amount = user.amount.sub(_amount);
         user.rewardDebt = user.amount.mul(pool.accRewardTokenPerShare).div(
             1e12
@@ -276,7 +274,7 @@ contract BirdFarm is Ownable {
         emit Withdraw(msg.sender, _pid, _amount);
     }
 
-    function harvest(uint256 _pid) public {
+    function harvest(uint256 _pid) external {
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][msg.sender];
         updatePool(_pid);
@@ -292,7 +290,7 @@ contract BirdFarm is Ownable {
     }
 
     // Withdraw without caring about rewards. EMERGENCY ONLY.
-    function emergencyWithdraw(uint256 _pid) public {
+    function emergencyWithdraw(uint256 _pid) external {
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][msg.sender];
         pool.lpToken.safeTransfer(address(msg.sender), user.amount);
@@ -301,19 +299,29 @@ contract BirdFarm is Ownable {
         user.rewardDebt = 0;
     }
 
-    // Safe rewardToken transfer function, just in case if rounding error causes pool to not have enough REWARD_TOKENs.
     function safeRewardTokenTransfer(address _to, uint256 _amount) internal {
-        rewardToken.transfer(_to, _amount);
+        rewardToken.safeTransfer(_to, _amount);
     }
 
     function configTheEndRewardBlock() internal {
-        endBlock =
-            block.number.add(
-            (rewardToken.balanceOf(address(this)).div(rewardTokenPerBlock)));
+        endBlock = block.number.add(
+            (rewardToken.balanceOf(address(this)).div(rewardTokenPerBlock))
+        );
     }
+
+    /// @notice owner may use this function to setup end reward block. We want that when reward ends in the contract then the reward should not generate further.
+    /// @dev owner may use this function if he sent directly reward tokens to this contract.
+    function setUpEndRewardBlock(uint256 _blockNumber) external onlyOwner {
+        endBlock = _blockNumber;
+        emit EndRewardBlockChanged(_blockNumber);
+    }
+
+    event EndRewardBlockChanged(uint256 endRewardBlock);
 }
 
 //17th april 2021, $KEL, see in 17th may. read use cases. may invest then.
 
 // also config when admin puts in money
 // also if there are no pool tokens staked
+// send to simba with func requirements complete
+// then add the comments events etc
