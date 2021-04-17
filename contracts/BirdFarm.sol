@@ -56,7 +56,7 @@ contract BirdFarm is Ownable {
     uint256 public bonusEndBlock = 0;
 
     /// @dev REWARD_TOKEN tokens created per block.
-    uint256 public rewardTokenPerBlock = 100;
+    uint256 public rewardTokenPerBlock = 700;
     
     /// @dev Bonus muliplier for early rewardToken makers.
     uint256 public constant BONUS_MULTIPLIER = 10;
@@ -198,9 +198,11 @@ contract BirdFarm is Ownable {
         }
     }
 
+    uint256 private allPoolTokens = 0;
+
     // Update reward variables of the given pool to be up-to-date.
     function updatePool(uint256 _pid) public {
-        configTheEndRewardBlock(); // to stop making reward when reward tokens are empty in BirdFarm
+        if(allPoolTokens == 0) configTheEndRewardBlock(); // to stop making reward when reward tokens are empty in BirdFarm
 
         PoolInfo storage pool = poolInfo[_pid];
 
@@ -239,11 +241,13 @@ contract BirdFarm is Ownable {
             safeRewardTokenTransfer(msg.sender, pending);
         }
 
+
         pool.lpToken.safeTransferFrom(
             address(msg.sender),
             address(this),
             _amount
         );
+        allPoolTokens += _amount; 
         user.amount = user.amount.add(_amount);
         user.rewardDebt = user.amount.mul(pool.accRewardTokenPerShare).div(
             1e12
@@ -262,6 +266,8 @@ contract BirdFarm is Ownable {
                 user.rewardDebt
             );
         safeRewardTokenTransfer(msg.sender, pending);
+        
+        allPoolTokens -= _amount; 
         user.amount = user.amount.sub(_amount);
         user.rewardDebt = user.amount.mul(pool.accRewardTokenPerShare).div(
             1e12
@@ -297,17 +303,17 @@ contract BirdFarm is Ownable {
 
     // Safe rewardToken transfer function, just in case if rounding error causes pool to not have enough REWARD_TOKENs.
     function safeRewardTokenTransfer(address _to, uint256 _amount) internal {
-        uint256 rewardTokenBal = rewardToken.balanceOf(address(this));
-        if (_amount > rewardTokenBal) {
-            rewardToken.transfer(_to, rewardTokenBal);
-        } else {
-            rewardToken.transfer(_to, _amount);
-        }
+        rewardToken.transfer(_to, _amount);
     }
 
     function configTheEndRewardBlock() internal {
         endBlock =
-            block.number +
-            (rewardToken.balanceOf(address(this)).div(rewardTokenPerBlock));
+            block.number.add(
+            (rewardToken.balanceOf(address(this)).div(rewardTokenPerBlock)));
     }
 }
+
+//17th april 2021, $KEL, see in 17th may. read use cases. may invest then.
+
+// also config when admin puts in money
+// also if there are no pool tokens staked
