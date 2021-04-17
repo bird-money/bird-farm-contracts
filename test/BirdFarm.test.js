@@ -43,6 +43,14 @@ contract('BirdFarm', ([alice, bob, carol, dev, minter]) => {
     console.log('After 10x blocks');
     await seeBalances(alice);
 
+    await this.chef.harvest(0, { from: alice });
+    console.log('After >> Harvest >>');
+    await seeBalances(alice);
+
+    await run10x(time.advanceBlock);
+    console.log('After 10x blocks');
+    await seeBalances(alice);
+
     // 0.01 eth 1 eth rew per block
   });
 });
