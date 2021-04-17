@@ -9,7 +9,11 @@ contract('BirdFarm', ([alice, bob, carol, dev, minter]) => {
       from: minter,
     });
 
-    this.lp1 = await MockBEP20.new('LPToken', 'LP1', millionTokens(), {
+    this.lp1 = await MockBEP20.new('LPToken1', 'LP1', millionTokens(), {
+      from: minter,
+    });
+
+    this.lp2 = await MockBEP20.new('LPToken2', 'LP2', millionTokens(), {
       from: minter,
     });
 
@@ -18,6 +22,9 @@ contract('BirdFarm', ([alice, bob, carol, dev, minter]) => {
     });
 
     await this.lp1.transfer(alice, toWei('30'), { from: minter });
+    await this.lp1.transfer(bob, toWei('30'), { from: minter });
+    await this.lp2.transfer(alice, toWei('30'), { from: minter });
+    await this.lp2.transfer(bob, toWei('30'), { from: minter });
 
     //BEFORE: await this.usdt.transfer(this.chef.address, '8000000000000000000', { from: minter });
     //NOW:
@@ -27,15 +34,27 @@ contract('BirdFarm', ([alice, bob, carol, dev, minter]) => {
     await this.chef.addRewardTokensToContract(rewardSupply, { from: minter });
 
     await this.lp1.approve(this.chef.address, MAX_UINT256, { from: alice });
+    await this.lp1.approve(this.chef.address, MAX_UINT256, { from: bob });
+    await this.lp2.approve(this.chef.address, MAX_UINT256, { from: alice });
+    await this.lp2.approve(this.chef.address, MAX_UINT256, { from: bob });
     await this.chef.add('2000', this.lp1.address, true, { from: minter });
+    await this.chef.add('2000', this.lp2.address, true, { from: minter });
     console.log('Starting');
     console.log(
       fromWei(await this.chef.rewardPerBlock()).toString(),
-      ' Reward Tokens Per Block'
+      ' Reward Tokens Per Block\n'
     );
     await seeBalances(alice);
 
-    await this.chef.deposit('0', toWei('30'), { from: alice });
+    await this.chef.deposit('1', toWei('5'), { from: bob });
+    console.log('After deposit');
+    await seeBalances(alice);
+    
+    await this.chef.deposit('1', toWei('5'), { from: alice });
+    console.log('After deposit');
+    await seeBalances(alice);
+    
+    await this.chef.deposit('0', toWei('5'), { from: alice });
     console.log('After deposit');
     await seeBalances(alice);
 
@@ -43,7 +62,7 @@ contract('BirdFarm', ([alice, bob, carol, dev, minter]) => {
     console.log('After 1x block');
     await seeBalances(alice);
 
-    console.log('After adding 0.2 tokens');
+    console.log('After adding 2 reward tokens');
     await this.chef.addRewardTokensToContract(toWei('2'), { from: minter });
     await seeBalances(alice);
 
@@ -51,7 +70,7 @@ contract('BirdFarm', ([alice, bob, carol, dev, minter]) => {
     console.log('After 10x blocks');
     await seeBalances(alice);
 
-    await this.chef.harvest(0, { from: alice });
+    await this.chef.harvest('0', { from: alice });
     console.log('After >> Harvest >>');
     await seeBalances(alice);
 
@@ -59,11 +78,11 @@ contract('BirdFarm', ([alice, bob, carol, dev, minter]) => {
     console.log('After 10x blocks');
     await seeBalances(alice);
 
-    await this.chef.withdraw(0, toWei('30'), { from: alice });
+    await this.chef.withdraw('0', toWei('5'), { from: alice });
     console.log('I Did withdraw');
     await seeBalances(alice);
 
-    await this.chef.harvest(0, { from: alice });
+    await this.chef.harvest('0', { from: alice });
     console.log('After >> Harvest >>');
     await seeBalances(alice);
 
@@ -72,6 +91,15 @@ contract('BirdFarm', ([alice, bob, carol, dev, minter]) => {
 });
 
 const seeBalances = async acc => {
+  console.log(
+    ((await time.latestBlock()).toString()),
+    ' Curr Block'
+  );
+  
+  console.log(
+    ((await this.chef.endBlock()).toString()),
+    ' End Block'
+  );
   console.log(
     fromWei((await this.usdt.balanceOf(this.chef.address)).toString()),
     ' MasterChef Reward Tokens'
@@ -102,3 +130,5 @@ const run10x = async func => {
 const fromWei = w => web3.utils.fromWei(w);
 const toWei = w => web3.utils.toWei(w);
 const millionTokens = () => toWei('1000000');
+
+// bob can with draw his reward from chef
