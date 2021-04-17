@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+pragma solidity 0.6.12;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
@@ -6,16 +7,20 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-pragma solidity 0.6.12;
 
-// MasterChef is the master of RewardToken. He can make RewardToken and he is a fair guy.
+// BirdFarm is the master of RewardToken. He can make RewardToken and he is a fair guy.
 //
 // Note that it's ownable and the owner wields tremendous power. The ownership
 // will be transferred to a governance smart contract once REWARD_TOKEN is sufficiently
 // distributed and the community can show to govern itself.
 //
 // Have fun reading it. Hopefully it's bug-free. God bless.
-contract MasterChef is Ownable {
+
+/// @title Farming service for pool tokens
+/// @author Bird Money
+/// @notice You can use this contract to deposit pool tokens and get rewards
+/// @dev Admin can add a new Pool, users can deposit pool tokens, harvestReward, withdraw pool tokens
+contract BirdFarm is Ownable {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
@@ -44,31 +49,43 @@ contract MasterChef is Ownable {
         uint256 accRewardTokenPerShare; // Accumulated REWARD_TOKENs per share, times 1e12. See below.
     }
 
-    // The REWARD_TOKEN TOKEN!
+    /// @dev The REWARD_TOKEN TOKEN!
     IERC20 public rewardToken;
-    // Dev address.
-    address public devaddr;
-    // Block number when bonus REWARD_TOKEN period ends.
-    uint256 public bonusEndBlock;
-    // REWARD_TOKEN tokens created per block.
-    uint256 public rewardTokenPerBlock;
-    // Bonus muliplier for early rewardToken makers.
+
+    /// @dev Block number when bonus REWARD_TOKEN period ends.
+    uint256 public bonusEndBlock = 0;
+
+    /// @dev REWARD_TOKEN tokens created per block.
+    uint256 public rewardTokenPerBlock = 100;
+    
+    /// @dev Bonus muliplier for early rewardToken makers.
     uint256 public constant BONUS_MULTIPLIER = 10;
 
-    // Info of each pool.
+    /// @dev Info of each pool.
     PoolInfo[] public poolInfo;
-    // Info of each user that stakes LP tokens.
-    mapping(uint256 => mapping(address => UserInfo)) public userInfo;
-    // Total allocation poitns. Must be the sum of all allocation points in all pools.
-    uint256 public totalAllocPoint = 0;
-    // The block number when REWARD_TOKEN mining starts.
-    uint256 public startBlock;
 
-    // The block number when REWARD_TOKEN mining ends.
+    /// @dev Info of each user that stakes LP tokens.
+    mapping(uint256 => mapping(address => UserInfo)) public userInfo;
+    
+    /// @dev Total allocation poitns. Must be the sum of all allocation points in all pools.
+    uint256 public totalAllocPoint = 0;
+    
+    /// @dev The block number when REWARD_TOKEN mining starts.
+    uint256 public startBlock = 0;
+
+    /// @dev The block number when REWARD_TOKEN mining ends.
     uint256 public endBlock = type(uint256).max;
 
+    /// @dev when some one deposits pool tokens to contract
     event Deposit(address indexed user, uint256 indexed pid, uint256 amount);
+
+    /// @dev when some one withdraws pool tokens from contract
     event Withdraw(address indexed user, uint256 indexed pid, uint256 amount);
+
+    /// @dev when some one harvests reward tokens from contract
+    event Harvest(address indexed user, uint256 indexed pid, uint256 amount);
+    
+    /// @dev when some one do EMERGENCY withdraw of pool tokens from contract
     event EmergencyWithdraw(
         address indexed user,
         uint256 indexed pid,
@@ -76,17 +93,9 @@ contract MasterChef is Ownable {
     );
 
     constructor(
-        IERC20 _rewardToken,
-        address _devaddr,
-        uint256 _rewardTokenPerBlock,
-        uint256 _startBlock,
-        uint256 _bonusEndBlock
+        IERC20 _rewardToken
     ) public {
         rewardToken = _rewardToken;
-        devaddr = _devaddr;
-        rewardTokenPerBlock = _rewardTokenPerBlock;
-        bonusEndBlock = _bonusEndBlock;
-        startBlock = _startBlock;
     }
 
     function poolLength() external view returns (uint256) {
@@ -259,6 +268,21 @@ contract MasterChef is Ownable {
         );
         pool.lpToken.safeTransfer(address(msg.sender), _amount);
         emit Withdraw(msg.sender, _pid, _amount);
+    }
+
+    function harvest(uint256 _pid) public {
+        PoolInfo storage pool = poolInfo[_pid];
+        UserInfo storage user = userInfo[_pid][msg.sender];
+        updatePool(_pid);
+        uint256 pending =
+            user.amount.mul(pool.accRewardTokenPerShare).div(1e12).sub(
+                user.rewardDebt
+            );
+        safeRewardTokenTransfer(msg.sender, pending);
+        user.rewardDebt = user.amount.mul(pool.accRewardTokenPerShare).div(
+            1e12
+        );
+        emit Harvest(msg.sender, _pid, pending);
     }
 
     // Withdraw without caring about rewards. EMERGENCY ONLY.
