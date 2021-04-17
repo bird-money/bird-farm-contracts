@@ -5,7 +5,7 @@ const MockBEP20 = artifacts.require('MockERC20');
 
 contract('BirdFarm', ([alice, bob, carol, dev, minter]) => {
   it('real case', async () => {
-    this.usdt = await MockBEP20.new('USDT', 'USDT', '100000000000', {
+    this.usdt = await MockBEP20.new('USDT', 'USDT', '80000000000000000000', {
       from: minter,
     });
     this.lp1 = await MockBEP20.new('LPToken', 'LP1', '1000000', {
@@ -17,10 +17,14 @@ contract('BirdFarm', ([alice, bob, carol, dev, minter]) => {
     });
 
     await this.lp1.transfer(alice, '100', { from: minter });
-    await this.usdt.transfer(this.chef.address, '800', { from: minter });
+    await this.usdt.transfer(this.chef.address, '8000000000000000000', { from: minter });
     await this.lp1.approve(this.chef.address, MAX_UINT256, { from: alice });
     await this.chef.add('2000', this.lp1.address, true, { from: minter });
     console.log('Starting');
+    console.log(
+      fromWei(await this.chef.rewardTokenPerBlock()).toString(),
+      ' Reward Tokens Per Block'
+    );
     await seeBalances(alice);
 
     await this.chef.deposit(0, '20', { from: alice });
@@ -67,3 +71,5 @@ const seeBalances = async acc => {
   );
   console.log('');
 };
+
+const fromWei = w => web3.utils.fromWei(w)

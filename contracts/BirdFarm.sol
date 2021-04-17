@@ -56,7 +56,7 @@ contract BirdFarm is Ownable {
     uint256 public bonusEndBlock = 0;
 
     /// @dev REWARD_TOKEN tokens created per block.
-    uint256 public rewardTokenPerBlock = 700;
+    uint256 public rewardTokenPerBlock = 0.01 ether;
     
     /// @dev Bonus muliplier for early rewardToken makers.
     uint256 public constant BONUS_MULTIPLIER = 10;
