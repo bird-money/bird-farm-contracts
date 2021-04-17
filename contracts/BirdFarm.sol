@@ -55,8 +55,9 @@ contract BirdFarm is Ownable {
     /// @dev Block number when bonus REWARD_TOKEN period ends.
     uint256 public bonusEndBlock = 0;
 
-    /// @dev REWARD_TOKEN tokens created per block.
-    uint256 public rewardPerBlock = 0.01 ether;
+    /// @notice REWARD_TOKEN tokens created per block.
+    /// @dev its equal to approx 1000 reward tokens per day
+    uint256 public rewardPerBlock = 0.15 ether; 
 
     /// @dev Bonus muliplier for early rewardToken makers.
     uint256 private constant BONUS_MULTIPLIER = 10;
@@ -357,3 +358,5 @@ contract BirdFarm is Ownable {
 // then add the comments events etc
 
 //deposit money 3 times to learn what is reward debt
+
+// add function, block per sec, reward per day
