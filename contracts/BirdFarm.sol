@@ -27,6 +27,7 @@ contract BirdFarm is Ownable {
     struct UserInfo {
         uint256 amount; // How many LP tokens the user has provided.
         uint256 rewardDebt; // Reward debt. See explanation below.
+        uint256 reward;
         //
         // We do some fancy math here. Basically, any point in time, the amount of REWARD_TOKENs
         // entitled to a user but is pending to be distributed is:
@@ -186,9 +187,9 @@ contract BirdFarm is Ownable {
             );
         }
         return
-            user.amount.mul(accRewardTokenPerShare).div(1e12).sub(
+            user.reward.add(user.amount.mul(accRewardTokenPerShare).div(1e12).sub(
                 user.rewardDebt
-            );
+            ));
     }
 
     // Update reward vairables for all pools. Be careful of gas spending!
@@ -237,7 +238,8 @@ contract BirdFarm is Ownable {
                 user.amount.mul(pool.accRewardTokenPerShare).div(1e12).sub(
                     user.rewardDebt
                 );
-            safeRewardTokenTransfer(msg.sender, pending);
+            // safeRewardTokenTransfer(msg.sender, pending);
+            user.reward += pending;
         }
 
         pool.lpToken.safeTransferFrom(
@@ -263,8 +265,9 @@ contract BirdFarm is Ownable {
             user.amount.mul(pool.accRewardTokenPerShare).div(1e12).sub(
                 user.rewardDebt
             );
-        safeRewardTokenTransfer(msg.sender, pending);
-
+        //safeRewardTokenTransfer(msg.sender, pending);
+        user.reward += pending;
+        
         allPoolTokens -= _amount;
         user.amount = user.amount.sub(_amount);
         user.rewardDebt = user.amount.mul(pool.accRewardTokenPerShare).div(
@@ -282,7 +285,10 @@ contract BirdFarm is Ownable {
             user.amount.mul(pool.accRewardTokenPerShare).div(1e12).sub(
                 user.rewardDebt
             );
-        safeRewardTokenTransfer(msg.sender, pending);
+        user.reward += pending;
+        safeRewardTokenTransfer(msg.sender, user.reward);
+        user.reward = 0;
+
         user.rewardDebt = user.amount.mul(pool.accRewardTokenPerShare).div(
             1e12
         );
@@ -295,6 +301,7 @@ contract BirdFarm is Ownable {
         UserInfo storage user = userInfo[_pid][msg.sender];
         pool.lpToken.safeTransfer(address(msg.sender), user.amount);
         emit EmergencyWithdraw(msg.sender, _pid, user.amount);
+        user.reward = 0;
         user.amount = 0;
         user.rewardDebt = 0;
     }
@@ -317,6 +324,8 @@ contract BirdFarm is Ownable {
     }
 
     event EndRewardBlockChanged(uint256 endRewardBlock);
+
+
 }
 
 //17th april 2021, $KEL, see in 17th may. read use cases. may invest then.
@@ -325,3 +334,5 @@ contract BirdFarm is Ownable {
 // also if there are no pool tokens staked
 // send to simba with func requirements complete
 // then add the comments events etc
+
+//deposit money 3 times to learn what is reward debt
