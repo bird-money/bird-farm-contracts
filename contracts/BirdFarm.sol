@@ -56,7 +56,7 @@ contract BirdFarm is Ownable {
     uint256 public bonusEndBlock = 0;
 
     /// @dev REWARD_TOKEN tokens created per block.
-    uint256 public rewardTokenPerBlock = 0.01 ether;
+    uint256 public rewardPerBlock = 0.01 ether;
 
     /// @dev Bonus muliplier for early rewardToken makers.
     uint256 private constant BONUS_MULTIPLIER = 10;
@@ -179,7 +179,7 @@ contract BirdFarm is Ownable {
             uint256 multiplier =
                 getMultiplier(pool.lastRewardBlock, block.number);
             uint256 rewardTokenReward =
-                multiplier.mul(rewardTokenPerBlock).mul(pool.allocPoint).div(
+                multiplier.mul(rewardPerBlock).mul(pool.allocPoint).div(
                     totalAllocPoint
                 );
             accRewardTokenPerShare = accRewardTokenPerShare.add(
@@ -187,9 +187,11 @@ contract BirdFarm is Ownable {
             );
         }
         return
-            user.reward.add(user.amount.mul(accRewardTokenPerShare).div(1e12).sub(
-                user.rewardDebt
-            ));
+            user.reward.add(
+                user.amount.mul(accRewardTokenPerShare).div(1e12).sub(
+                    user.rewardDebt
+                )
+            );
     }
 
     // Update reward vairables for all pools. Be careful of gas spending!
@@ -219,7 +221,7 @@ contract BirdFarm is Ownable {
 
         uint256 multiplier = getMultiplier(pool.lastRewardBlock, block.number);
         uint256 rewardTokenReward =
-            multiplier.mul(rewardTokenPerBlock).mul(pool.allocPoint).div(
+            multiplier.mul(rewardPerBlock).mul(pool.allocPoint).div(
                 totalAllocPoint
             );
         pool.accRewardTokenPerShare = pool.accRewardTokenPerShare.add(
@@ -238,7 +240,6 @@ contract BirdFarm is Ownable {
                 user.amount.mul(pool.accRewardTokenPerShare).div(1e12).sub(
                     user.rewardDebt
                 );
-            // safeRewardTokenTransfer(msg.sender, pending);
             user.reward += pending;
         }
 
@@ -257,6 +258,10 @@ contract BirdFarm is Ownable {
 
     // Withdraw LP tokens from MasterChef.
     function withdraw(uint256 _pid, uint256 _amount) external {
+        require(
+            now > usersCanUnstakeAtTime,
+            "Can not withdraw/unstake at this time."
+        );
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][msg.sender];
         require(user.amount >= _amount, "withdraw: not good");
@@ -265,9 +270,8 @@ contract BirdFarm is Ownable {
             user.amount.mul(pool.accRewardTokenPerShare).div(1e12).sub(
                 user.rewardDebt
             );
-        //safeRewardTokenTransfer(msg.sender, pending);
         user.reward += pending;
-        
+
         allPoolTokens -= _amount;
         user.amount = user.amount.sub(_amount);
         user.rewardDebt = user.amount.mul(pool.accRewardTokenPerShare).div(
@@ -278,6 +282,7 @@ contract BirdFarm is Ownable {
     }
 
     function harvest(uint256 _pid) external {
+        require(now > usersCanHarvestAtTime, "Can not harvest at this time.");
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][msg.sender];
         updatePool(_pid);
@@ -312,7 +317,7 @@ contract BirdFarm is Ownable {
 
     function configTheEndRewardBlock() internal {
         endBlock = block.number.add(
-            (rewardToken.balanceOf(address(this)).div(rewardTokenPerBlock))
+            (rewardToken.balanceOf(address(this)).div(rewardPerBlock))
         );
     }
 
@@ -325,7 +330,23 @@ contract BirdFarm is Ownable {
 
     event EndRewardBlockChanged(uint256 endRewardBlock);
 
+    /// @notice owner puts reward tokens in contract
+    /// @dev owner can add reward token to contract so that it can be distributed to users
+    /// @param _amount amount of reward tokens
+    function addRewardTokensToContract(uint256 _amount) external onlyOwner {
+        uint256 rewardEndsInBlocks = _amount.div(rewardPerBlock);
 
+        uint256 lastEndBlock = endBlock == 0 ? block.number : endBlock;
+        endBlock = lastEndBlock + rewardEndsInBlocks;
+
+        require(
+            rewardToken.transferFrom(msg.sender, address(this), _amount),
+            "Error in adding reward tokens in contract."
+        );
+        emit EndRewardBlockChanged(endBlock);
+    }
+
+    event AddedRewardTokensToContract(uint256 amount);
 }
 
 //17th april 2021, $KEL, see in 17th may. read use cases. may invest then.

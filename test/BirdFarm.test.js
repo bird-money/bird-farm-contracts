@@ -17,12 +17,16 @@ contract('BirdFarm', ([alice, bob, carol, dev, minter]) => {
     });
 
     await this.lp1.transfer(alice, '100', { from: minter });
-    await this.usdt.transfer(this.chef.address, '8000000000000000000', { from: minter });
+    
+    //await this.usdt.transfer(this.chef.address, '8000000000000000000', { from: minter });
+    await this.usdt.approve(this.chef.address, MAX_UINT256, { from: minter });
+    await this.chef.addRewardTokensToContract('8000000000000000000', { from: minter });
+
     await this.lp1.approve(this.chef.address, MAX_UINT256, { from: alice });
     await this.chef.add('2000', this.lp1.address, true, { from: minter });
     console.log('Starting');
     console.log(
-      fromWei(await this.chef.rewardTokenPerBlock()).toString(),
+      fromWei(await this.chef.rewardPerBlock()).toString(),
       ' Reward Tokens Per Block'
     );
     await seeBalances(alice);
