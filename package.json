@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "migrate": "truffle migrate --network bscTestnet --reset",
-    "verify": "truffle run verify Migrations MasterChef --network bscTestnet",
+    "migrate": "truffle migrate --network kovan --reset",
+    "verify": "truffle run verify Migrations BirdFarm --network kovan",
     "deploy": "yarn migrate && yarn verify",
     "migrateMainnet": "truffle migrate --network mainnet --reset",
     "verifyMainnet": "truffle run verify Migrations EDIPI --network mainnet",

@@ -35,8 +35,7 @@ module.exports = {
         );
       },
       network_id: '97',
-      //  gas: 30000000
-      //       6721975
+      skipDryRun: true,
     },
 
     bscMainnet: {
@@ -54,6 +53,7 @@ module.exports = {
         );
       },
       network_id: '3',
+      skipDryRun: true,
     },
     kovan: {
       provider: function () {
@@ -63,6 +63,7 @@ module.exports = {
         );
       },
       network_id: '42',
+      skipDryRun: true,
     },
   },
   plugins: ['truffle-plugin-verify'],

@@ -27,7 +27,7 @@ contract BirdFarm is Ownable {
     struct UserInfo {
         uint256 amount; // How many LP tokens the user has provided.
         uint256 rewardDebt; // Reward debt. See explanation below.
-        uint256 reward;
+        uint256 reward; // A
         //
         // We do some fancy math here. Basically, any point in time, the amount of REWARD_TOKENs
         // entitled to a user but is pending to be distributed is:
