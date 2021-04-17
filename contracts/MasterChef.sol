@@ -3,8 +3,8 @@
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "./MockERC20.sol";
 
 pragma solidity 0.6.12;
 
@@ -45,7 +45,7 @@ contract MasterChef is Ownable {
     }
 
     // The REWARD_TOKEN TOKEN!
-    MockERC20 public rewardToken;
+    IERC20 public rewardToken;
     // Dev address.
     address public devaddr;
     // Block number when bonus REWARD_TOKEN period ends.
@@ -64,6 +64,9 @@ contract MasterChef is Ownable {
     // The block number when REWARD_TOKEN mining starts.
     uint256 public startBlock;
 
+    // The block number when REWARD_TOKEN mining ends.
+    uint256 public endBlock = type(uint256).max;
+
     event Deposit(address indexed user, uint256 indexed pid, uint256 amount);
     event Withdraw(address indexed user, uint256 indexed pid, uint256 amount);
     event EmergencyWithdraw(
@@ -73,7 +76,7 @@ contract MasterChef is Ownable {
     );
 
     constructor(
-        MockERC20 _rewardToken,
+        IERC20 _rewardToken,
         address _devaddr,
         uint256 _rewardTokenPerBlock,
         uint256 _startBlock,
@@ -134,14 +137,19 @@ contract MasterChef is Ownable {
         view
         returns (uint256)
     {
-        if (_to <= bonusEndBlock) {
-            return _to.sub(_from).mul(BONUS_MULTIPLIER);
-        } else if (_from >= bonusEndBlock) {
-            return _to.sub(_from);
+        uint256 from = _from;
+        uint256 to = _to;
+        if (to > endBlock) to = endBlock;
+        if (from > endBlock) from = endBlock;
+
+        if (to <= bonusEndBlock) {
+            return to.sub(from).mul(BONUS_MULTIPLIER);
+        } else if (from >= bonusEndBlock) {
+            return to.sub(from);
         } else {
             return
-                bonusEndBlock.sub(_from).mul(BONUS_MULTIPLIER).add(
-                    _to.sub(bonusEndBlock)
+                bonusEndBlock.sub(from).mul(BONUS_MULTIPLIER).add(
+                    to.sub(bonusEndBlock)
                 );
         }
     }
@@ -183,7 +191,10 @@ contract MasterChef is Ownable {
 
     // Update reward variables of the given pool to be up-to-date.
     function updatePool(uint256 _pid) public {
+        configTheEndRewardBlock(); // to stop making reward when reward tokens are empty in BirdFarm
+
         PoolInfo storage pool = poolInfo[_pid];
+
         if (block.number <= pool.lastRewardBlock) {
             return;
         }
@@ -192,18 +203,19 @@ contract MasterChef is Ownable {
             pool.lastRewardBlock = block.number;
             return;
         }
+
         uint256 multiplier = getMultiplier(pool.lastRewardBlock, block.number);
         uint256 rewardTokenReward =
             multiplier.mul(rewardTokenPerBlock).mul(pool.allocPoint).div(
                 totalAllocPoint
             );
-        //rewardToken.mint(devaddr, rewardTokenReward.div(10));
-        //rewardToken.mint(address(this), rewardTokenReward);
         pool.accRewardTokenPerShare = pool.accRewardTokenPerShare.add(
             rewardTokenReward.mul(1e12).div(lpSupply)
         );
         pool.lastRewardBlock = block.number;
     }
+
+    bool private firstTime = true;
 
     // Deposit LP tokens to MasterChef for REWARD_TOKEN allocation.
     function deposit(uint256 _pid, uint256 _amount) public {
@@ -217,6 +229,7 @@ contract MasterChef is Ownable {
                 );
             safeRewardTokenTransfer(msg.sender, pending);
         }
+
         pool.lpToken.safeTransferFrom(
             address(msg.sender),
             address(this),
@@ -268,9 +281,9 @@ contract MasterChef is Ownable {
         }
     }
 
-    // Update dev address by the previous dev.
-    function dev(address _devaddr) public {
-        require(msg.sender == devaddr, "dev: wut?");
-        devaddr = _devaddr;
+    function configTheEndRewardBlock() internal {
+        endBlock =
+            block.number +
+            (rewardToken.balanceOf(address(this)).div(rewardTokenPerBlock));
     }
 }
