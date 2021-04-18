@@ -1,23 +1,20 @@
 const { MAX_UINT256 } = require('@openzeppelin/test-helpers/src/constants');
 
 const kovanDeployScript = async (deployer, acc) => {
-  // await deployer.deploy(LPToken, 'LP', 'LP', toWei('1000'));
-  // await deployer.deploy(USDT, 'USDT', 'USDT', toWei('1000'));
-  const usdtAddr = '0xD86054bE96C0443209E06564784866c9A8fCb84f';
-  const simpleLpAddr = '0xD86054bE96C0443209E06564784866c9A8fCb84f';
+  //await deployer.deploy(LPToken, 'LP', 'LP', toWei('1000'));
+  //const usdt = await deployer.deploy(USDT, 'USDT', 'USDT', toWei('1000'));
+  const usdt = await USDT.deployed();
   const birdEthLP = '0xF1719564AE1A46bA7A53164191D1dc8De31ECB79';
 
-  const farm = await deployer.deploy(BirdFarm, usdtAddr);
+  const farm = await deployer.deploy(BirdFarm, USDT.address);
 
-  const usdt = await USDT.at(usdtAddr);
   await usdt.approve(BirdFarm.address, MAX_UINT256);
   await usdt.mint(acc, millionTokens());
   await farm.addRewardTokensToContract(toWei('30000'));
 
-
   await farm.add( // addPool
     '1000', // Allocpoint
-    simpleLpAddr, // LP Token
+    LPToken.address, // LP Token
     true // withUpdate
   );
 
@@ -27,8 +24,8 @@ const kovanDeployScript = async (deployer, acc) => {
     true // withUpdate
   );
 
-  console.log('LP Token address: ', simpleLpAddr);
-  console.log('USDT address: ', usdtAddr);
+  console.log('LP Token address: ', LPToken.address);
+  console.log('USDT address: ', USDT.address);
   console.log('BirdFarm address: ', BirdFarm.address);
 };
 

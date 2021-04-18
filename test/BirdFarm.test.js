@@ -1,19 +1,14 @@
-const { expectRevert, time } = require('@openzeppelin/test-helpers');
-const { MAX_UINT256 } = require('@openzeppelin/test-helpers/src/constants');
-const BirdFarm = artifacts.require('BirdFarm');
-const MockBEP20 = artifacts.require('MockERC20');
-
 contract('BirdFarm', ([alice, bob, carol, dev, minter]) => {
   it('real case', async () => {
-    this.usdt = await MockBEP20.new('USDT', 'USDT', millionTokens(), {
+    this.usdt = await USDT.new('USDT', 'USDT', millionTokens(), {
       from: minter,
     });
 
-    this.lp1 = await MockBEP20.new('LPToken1', 'LP1', millionTokens(), {
+    this.lp1 = await LPToken.new('LPToken1', 'LP1', millionTokens(), {
       from: minter,
     });
 
-    this.lp2 = await MockBEP20.new('LPToken2', 'LP2', millionTokens(), {
+    this.lp2 = await LPToken.new('LPToken2', 'LP2', millionTokens(), {
       from: minter,
     });
 
@@ -29,7 +24,7 @@ contract('BirdFarm', ([alice, bob, carol, dev, minter]) => {
     //BEFORE: await this.usdt.transfer(this.chef.address, '8000000000000000000', { from: minter });
     //NOW:
     // const rewardSupply = toWei('30000');
-    const rewardSupply = toWei('0.2');
+    const rewardSupply = toWei('2');
     await this.usdt.approve(this.chef.address, MAX_UINT256, { from: minter });
     await this.chef.addRewardTokensToContract(rewardSupply, { from: minter });
 
@@ -46,14 +41,6 @@ contract('BirdFarm', ([alice, bob, carol, dev, minter]) => {
     );
     await seeBalances(alice);
 
-    await this.chef.deposit('1', toWei('5'), { from: bob });
-    console.log('After deposit');
-    await seeBalances(alice);
-    
-    await this.chef.deposit('1', toWei('5'), { from: alice });
-    console.log('After deposit');
-    await seeBalances(alice);
-    
     await this.chef.deposit('0', toWei('5'), { from: alice });
     console.log('After deposit');
     await seeBalances(alice);
@@ -78,31 +65,29 @@ contract('BirdFarm', ([alice, bob, carol, dev, minter]) => {
     console.log('After 10x blocks');
     await seeBalances(alice);
 
-    await this.chef.withdraw('0', toWei('5'), { from: alice });
-    console.log('I Did withdraw');
-    await seeBalances(alice);
+    // await this.chef.withdraw('0', toWei('5'), { from: alice });
+    // console.log('I Did withdraw');
+    // await seeBalances(alice);
 
     await this.chef.harvest('0', { from: alice });
     console.log('After >> Harvest >>');
     await seeBalances(alice);
 
-    console.log('Bob pendingReward');
-    await seeBalances(bob);
-    
+    console.log('Alice pendingReward');
+    await seeBalances(alice);
+
+    await run10x(time.advanceBlock);
+    console.log('After 10x blocks');
+    await seeBalances(alice);
+
     //   // 0.01 eth 1 eth rew per block
   });
 });
 
 const seeBalances = async acc => {
-  console.log(
-    ((await time.latestBlock()).toString()),
-    ' Curr Block'
-  );
-  
-  console.log(
-    ((await this.chef.endBlock()).toString()),
-    ' End Block'
-  );
+  console.log((await time.latestBlock()).toString(), ' Curr Block');
+
+  console.log((await this.chef.endBlock()).toString(), ' End Block');
   console.log(
     fromWei((await this.usdt.balanceOf(this.chef.address)).toString()),
     ' MasterChef Reward Tokens'
@@ -124,8 +109,6 @@ const seeBalances = async acc => {
     ' Alice Pending Reward Tokens'
   );
   console.log('');
-
-  
 };
 
 const run10x = async func => {
@@ -137,3 +120,9 @@ const toWei = w => web3.utils.toWei(w);
 const millionTokens = () => toWei('1000000');
 
 // bob can with draw his reward from chef
+
+const { expectRevert, time } = require('@openzeppelin/test-helpers');
+const { MAX_UINT256 } = require('@openzeppelin/test-helpers/src/constants');
+const BirdFarm = artifacts.require('BirdFarm');
+const USDT = artifacts.require('USDT');
+const LPToken = artifacts.require('LPToken');
