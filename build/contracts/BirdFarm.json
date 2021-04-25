@@ -233,7 +233,8 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function"
+      "type": "function",
+      "constant": true
     },
     {
       "inputs": [],
@@ -246,7 +247,8 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function"
+      "type": "function",
+      "constant": true
     },
     {
       "inputs": [],
@@ -259,7 +261,8 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function"
+      "type": "function",
+      "constant": true
     },
     {
       "inputs": [
@@ -293,7 +296,8 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function"
+      "type": "function",
+      "constant": true
     },
     {
       "inputs": [],
@@ -313,7 +317,8 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function"
+      "type": "function",
+      "constant": true
     },
     {
       "inputs": [],
@@ -326,7 +331,8 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function"
+      "type": "function",
+      "constant": true
     },
     {
       "inputs": [],
@@ -339,7 +345,8 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function"
+      "type": "function",
+      "constant": true
     },
     {
       "inputs": [],
@@ -352,7 +359,8 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function"
+      "type": "function",
+      "constant": true
     },
     {
       "inputs": [
@@ -399,7 +407,8 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function"
+      "type": "function",
+      "constant": true
     },
     {
       "inputs": [],
@@ -412,7 +421,8 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function"
+      "type": "function",
+      "constant": true
     },
     {
       "inputs": [],
@@ -425,7 +435,8 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function"
+      "type": "function",
+      "constant": true
     },
     {
       "inputs": [],
@@ -438,7 +449,8 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function"
+      "type": "function",
+      "constant": true
     },
     {
       "inputs": [
@@ -508,7 +520,8 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function"
+      "type": "function",
+      "constant": true
     },
     {
       "inputs": [],
@@ -31362,7 +31375,7 @@
             {
               "indexed": false,
               "internalType": "uint256",
-              "name": "endRewardBlock",
+              "name": "endBlock",
               "type": "uint256"
             }
           ],
@@ -31437,15 +31450,80 @@
           ],
           "name": "Withdraw",
           "type": "event"
+        },
+        "0xaef38fc0702b0fad4b1dfce7e29092e26412be5abfadfabb118c6124d8880b6d": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "usersCanHarvestAtTime",
+              "type": "uint256"
+            }
+          ],
+          "name": "RewardFrozenTimeChanged",
+          "type": "event"
+        },
+        "0xb74d956cf6ec7842d08ebf0ab19ec03a88c1efd4a50ea4349d30f9c4ce512e98": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "internalType": "contract IERC20",
+              "name": "rewardToken",
+              "type": "address"
+            }
+          ],
+          "name": "RewardTokenChanged",
+          "type": "event"
+        },
+        "0x0914eb57aaf7dc30fb65a4997a39040c8c91ebe3bdd5226dde439f7a5fefaf6a": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "rewardPerBlock",
+              "type": "uint256"
+            }
+          ],
+          "name": "RewardTokenPerBlockChanged",
+          "type": "event"
+        },
+        "0xf0b3b2831f479a7321e755a2b6ef2ae0b5e32985a8959e61ffaec437194f4d3a": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "startRewardBlock",
+              "type": "uint256"
+            }
+          ],
+          "name": "StartRewardBlockChanged",
+          "type": "event"
+        },
+        "0x9e009f63830ca738bff6fbc38990622b83298c321dceb9b8c064b903c066db6d": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "usersCanUnstakeAtTime",
+              "type": "uint256"
+            }
+          ],
+          "name": "UnstakeFrozenTimeChanged",
+          "type": "event"
         }
       },
       "links": {},
-      "address": "0xA5915590ea3F64fB7b4CF82e280Ad39130d057A2",
-      "transactionHash": "0x4217765da389c86589b129bff0a4ea3736e6b94a94257c35a0425bc99c3bd954"
+      "address": "0x92262DA64563F2B97C021b1f366ed1161211Eaf9",
+      "transactionHash": "0xb18800b2280ae7cb5e3ce155092f7aba2e0b8f10bdc0e3fa802aca06c1ed3d86"
     }
   },
   "schemaVersion": "3.4.0",
-  "updatedAt": "2021-04-25T09:54:33.550Z",
+  "updatedAt": "2021-04-25T10:01:10.606Z",
   "networkType": "ethereum",
   "devdoc": {
     "author": "Bird Money",
