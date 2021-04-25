@@ -190,8 +190,7 @@ contract BirdFarm is Ownable {
     /// @dev calculates reward tokens of a user with repect to pool id
     /// @param _pid the pool id
     /// @param _user the user who is calls this function
-    /// @return pending reward token of a user
-    // View function to see pending REWARD_TOKENs on frontend.
+    /// @return pending reward tokens of a user
     function pendingRewardToken(uint256 _pid, address _user)
         external
         view
@@ -221,7 +220,7 @@ contract BirdFarm is Ownable {
     }
 
     // Update reward vairables for all pools. Be careful of gas spending!
-    function massUpdatePools() internal {
+    function massUpdatePools() public {
         uint256 length = poolInfo.length;
         for (uint256 pid = 0; pid < length; ++pid) {
             updatePool(pid);
@@ -231,7 +230,7 @@ contract BirdFarm is Ownable {
     uint256 private stakedTokens = 0;
 
     // Update reward variables of the given pool to be up-to-date.
-    function updatePool(uint256 _pid) internal {
+    function updatePool(uint256 _pid) public {
         if (stakedTokens == 0) configTheEndRewardBlock(); // to stop making reward when reward tokens are empty in BirdFarm
 
         PoolInfo storage pool = poolInfo[_pid];
@@ -342,18 +341,7 @@ contract BirdFarm is Ownable {
         emit Harvest(msg.sender, _pid, pending);
     }
 
-    /// @notice Withdraw without caring about rewards. EMERGENCY ONLY.
-    /// @param _pid pool id
-    function emergencyWithdraw(uint256 _pid) external {
-        PoolInfo storage pool = poolInfo[_pid];
-        UserInfo storage user = userInfo[_pid][msg.sender];
-        user.reward = 0;
-        user.amount = 0;
-        user.rewardDebt = 0;
-        pool.poolToken.safeTransfer(address(msg.sender), user.amount);
-        emit EmergencyWithdraw(msg.sender, _pid, user.amount);
-    }
-
+   
     function configTheEndRewardBlock() internal {
         endBlock = block.number.add(
             (rewardToken.balanceOf(address(this)).div(rewardPerBlock))
