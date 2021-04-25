@@ -219,7 +219,7 @@ contract BirdFarm is Ownable {
             );
     }
 
-    // Update reward vairables for all pools. Be careful of gas spending!
+    /// @notice Update reward vairables for all pools. Be careful of gas spending!
     function massUpdatePools() public {
         uint256 length = poolInfo.length;
         for (uint256 pid = 0; pid < length; ++pid) {
@@ -229,7 +229,8 @@ contract BirdFarm is Ownable {
 
     uint256 private stakedTokens = 0;
 
-    // Update reward variables of the given pool to be up-to-date.
+    /// @notice Update reward variables of the given pool to be up-to-date.
+    /// @param _pid the pool id
     function updatePool(uint256 _pid) public {
         if (stakedTokens == 0) configTheEndRewardBlock(); // to stop making reward when reward tokens are empty in BirdFarm
 
