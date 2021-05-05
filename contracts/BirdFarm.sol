@@ -96,13 +96,6 @@ contract BirdFarm is Ownable {
     /// @dev when some one harvests reward tokens from contract
     event Harvest(address indexed user, uint256 indexed pid, uint256 amount);
 
-    /// @dev when some one do EMERGENCY withdraw of pool tokens from contract
-    event EmergencyWithdraw(
-        address indexed user,
-        uint256 indexed pid,
-        uint256 amount
-    );
-
     constructor(IERC20 _rewardToken) public {
         rewardToken = _rewardToken;
     }
@@ -273,16 +266,16 @@ contract BirdFarm is Ownable {
             );
         user.reward += pending;
 
-        pool.poolToken.safeTransferFrom(
-            address(msg.sender),
-            address(this),
-            _amount
-        );
         stakedTokens += _amount;
         user.amount = user.amount.add(_amount);
         user.rewardDebt = user.amount.mul(pool.accRewardTokenPerShare).div(
             1e12
         );
+        pool.poolToken.safeTransferFrom(
+            address(msg.sender),
+            address(this),
+            _amount
+        ); 
         emit Deposit(msg.sender, _pid, _amount);
     }
 
@@ -366,6 +359,18 @@ contract BirdFarm is Ownable {
     }
 
     event AddedRewardTokensToContract(uint256 amount);
+
+    /// @notice owner takes out any tokens in contract
+    /// @dev owner can take out any locked tokens in contract
+    /// @param _token the token owner wants to take out from contract
+    /// @param _amount amount of tokens
+    function withdrawAnyTokenFromContract(IERC20 _token, uint256 _amount) external onlyOwner {
+        _token.safeTransfer(msg.sender, _amount);
+        emit OwnerWithdraw(_token, _amount);
+    }
+
+    event OwnerWithdraw(IERC20 token, uint256 amount);
+
 
     /// @notice owner can change reward token
     /// @dev owner can set reward token
